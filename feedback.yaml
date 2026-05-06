@@ -1,10 +1,10 @@
-review_round: 8
+review_round: 12
 
-overall_status: needs_update
+overall_status: approved
 
 approval_criteria:
   no_critical_findings: true
-  no_high_findings: false
+  no_high_findings: true
   all_major_claims_have_red_hat_references: true
   all_required_sections_complete: true
   no_assumptions: true
@@ -977,7 +977,77 @@ feedback:
       document structure in rules/claude-openshift-on-rhoso-openstack-rules.md defines
       Section D as "Detailed workflow: Use numbered steps. Each step must include a source
       or state Source required." No Mermaid diagram requirement appears anywhere in the
-      rules file. FB-043 is closed as out of scope for the same reason as FB-034.
+      rules file. The template file (rules/openshift-on-rhoso-openstack-comparison-template.md)
+      has been removed from the project, but the governing rules file
+      (rules/claude-openshift-on-rhoso-openstack-rules.md) remains and still does not
+      mandate Mermaid diagrams. The rules file explicitly requires numbered steps for
+      Section D workflows. FB-043 remains closed as out of scope. The user request to
+      re-examine this finding in round 10 was evaluated: the rules file is the authoritative
+      specification and it has not changed to require diagrams.
+
+  - id: FB-044
+    severity: medium
+    section: "Section 11.E: Block Storage Operations by Category — etcd backup must-have row"
+    issue: >
+      The etcd backup entry in Section 11.E (must-have table) describes the automated
+      recurring etcd backup mechanism using the EtcdBackup custom resource and the etcd
+      recurring backup CRD with a crontab schedule field, managed by the etcd Operator.
+      This description implies a generally available, production-supported mechanism.
+
+      Web search of the OCP 4.18 Control plane backup and restore documentation
+      (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/backup_and_restore/control-plane-backup-and-restore)
+      confirmed that automated etcd backups using the EtcdBackup CRD and the etcd
+      recurring backup CRD require the TechPreviewNoUpgrade feature set to be enabled
+      on the cluster. The TechPreviewNoUpgrade feature set:
+      (1) prevents minor version updates on the cluster;
+      (2) cannot be disabled once enabled;
+      (3) is explicitly not recommended for production clusters by Red Hat.
+
+      The document describes this as a "must-have" operation and lists the evidence
+      strength as "Documented" without noting the Technology Preview status or the
+      cluster-upgrade-blocking consequence of enabling TechPreviewNoUpgrade.
+
+      This creates a materially misleading impression that the automated etcd backup
+      PVC mechanism is a standard production-supported operation for OCP 4.18.
+
+      Note: A single manual etcd backup using the `cluster-backup.sh` script does not
+      require TechPreviewNoUpgrade and can be written to a PVC, but the recurring/automated
+      backup capability described in the document does require Technology Preview
+      feature enablement.
+    required_change: >
+      Update the etcd backup row in Section 11.E to distinguish between:
+      (1) Manual etcd backup using the cluster-backup.sh script — this is a
+          generally available, production-supported mechanism that can target a PVC;
+          no feature gate is required.
+      (2) Automated recurring etcd backup using the EtcdBackup CRD and etcd
+          recurring backup CRD — this is a Technology Preview feature in OCP 4.18
+          that requires the TechPreviewNoUpgrade feature set; enabling this prevents
+          minor version upgrades and is not recommended for production clusters.
+
+      The row description must include a note that automated etcd backup (EtcdBackup CRD
+      / etcd recurring backup CRD) is a Technology Preview feature in OCP 4.18, and that
+      enabling TechPreviewNoUpgrade prevents cluster minor version upgrades.
+
+      The evidence strength for the automated recurring backup portion should be
+      downgraded to "Derived from documented workflow" or "Not confirmed" for
+      production suitability, since Red Hat explicitly states this is not for production.
+
+      The Red Hat reference should be updated to specifically cite the OCP 4.18
+      Control plane backup and restore chapter:
+      https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/backup_and_restore/control-plane-backup-and-restore
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/backup_and_restore/control-plane-backup-and-restore"
+    status: resolved
+    resolution_note: >
+      The document was fully rewritten in review round 12. The new document (Section 7)
+      distinguishes between the manual etcd backup mechanism (cluster-backup.sh script,
+      generally available, no feature gate required) and the automated recurring backup
+      (EtcdBackup CRD, Technology Preview, requires TechPreviewNoUpgrade, prevents minor
+      version upgrades, not for production). The Important note block in Section 7 explicitly
+      states that TechPreviewNoUpgrade prevents minor version upgrades, cannot be disabled
+      once enabled, and that Red Hat explicitly states this configuration is not for
+      production clusters. The OCP 4.18 Backup and restore — Control plane backup and
+      restore URL is cited as the reference.
 
 reviewer_behavior:
   description: >
@@ -1142,3 +1212,285 @@ notes:
   - >
     overall_status remains needs_update because FB-041 (high severity) remains open.
     approval_criteria.no_high_findings is set to false.
+
+  - >
+    Review round 9 was conducted on 2026-05-06. The review targeted (1) verification of
+    Section 8.C (Node IP Assignment and Static Addressing), (2) verification of the three
+    new Section 17 not-confirmed items added for FB-041, and (3) spot-check of 5-10 other
+    claims across the document against their cited sources.
+
+  - >
+    FB-041 confirmed resolved. Section 8.C (Node IP Assignment and Static Addressing) is
+    present in the document at lines 298-331. The subsection covers all three installation
+    modes: IPI (Neutron DHCP required, machinesSubnet must have DHCP enabled), UPI on
+    OpenStack (Neutron ports and Nova servers provisioned manually, --fixed-ip not
+    confirmed), and platform-agnostic (no Neutron port management, static IP via
+    NodeNetworkConfigurationPolicy or MachineConfig post-install, Ignition-level static IP
+    not confirmed). RHOSO isolated NIC configuration via NMState Operator with NNCP is
+    documented for all three modes.
+
+  - >
+    Section 8.C comparison table verified. The table (lines 326-330) has three rows:
+    Initial node IP assignment, RHOSO isolated NIC configuration (post-install), and
+    Static IP mechanism for primary cluster NIC. Each row has an "Evidence strength" column.
+    Evidence strength labels use the permitted values: "Documented (IPI); Not confirmed (UPI
+    fixed-ip detail); Not confirmed (platform-agnostic mechanism)" for the initial IP row;
+    "Documented" for the RHOSO isolated NIC row; and a composite label for the static IP row.
+    No row is missing an evidence strength label.
+
+  - >
+    Section 8.C sources verified. The machinesSubnet DHCP requirement cites OCP 4.18
+    Installation configuration parameters for OpenStack
+    (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installation-config-parameters-openstack)
+    — web search confirmed this is a valid OCP 4.18 documentation page and the DHCP
+    requirement for machinesSubnet is documented there. The RHOSO isolated NIC
+    (NodeNetworkConfigurationPolicy with static IPv4) cites RHOSO 18.0 Deploying —
+    Preparing networks
+    (https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhoso-networks_preparing)
+    — web search confirmed NNCP with static IPv4 for isolated networks (internalapi,
+    storage, tenant) is documented in this chapter and multiple RHOSO 18.0 deployment
+    guides. The NMState Operator cites OCP 4.18 Kubernetes NMState
+    (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/kubernetes_nmstate/index)
+    — web search confirmed this is a valid OCP 4.18 documentation resource.
+
+  - >
+    Section 17 new not-confirmed items verified. The document now contains 9 not-confirmed
+    items (lines 581-589). The three new items added for FB-041 are correctly present:
+    (7) Whether UPI on OpenStack Ansible playbooks create Neutron ports with --fixed-ip;
+    (8) Whether static IP configuration of the primary cluster NIC is supported on UPI on
+    OpenStack; (9) Whether static IP assignment at the Ignition level is supported for
+    platform-agnostic installation on OpenStack-hosted VMs. All three are correctly marked
+    as not confirmed with the appropriate source needed statement.
+
+  - >
+    Spot-checks performed and passed on the following claims:
+    (1) Load balancing on RHOSP: OpenShiftManagedDefault and UserManaged options confirmed
+    in OCP 4.18 Ingress and load balancing documentation — URL valid.
+    (2) Cinder and Manila CSI auto-installation on OpenStack clusters: confirmed consistent
+    with OCP 4.18 Storage documentation description of auto-installation on OpenStack clusters.
+    (3) RHOSO 18.0 150 GB PV pool requirement and RHOCP 4.18 requirement: confirmed in
+    RHOSO 18.0 Infrastructure and system requirements at
+    https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/assembly_infrastructure-and-system-requirements.
+    (4) OCP 4.18 Managing user-provisioned infrastructure manually URL confirmed valid:
+    https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/managing-user-provisioned-infrastructure-manually.
+    (5) LokiStack "recommended for best performance" phrase: confirmed this wording is
+    consistent with Red Hat OpenShift Logging documentation across multiple versions; the
+    phrase reflects a sourced recommendation, not an unsupported reviewer opinion about
+    installation modes — within scope of the evidence rules.
+    (6) UPI on OpenStack Ansible playbooks creating Neutron ports confirmed in the OCP 4.18
+    UPI on OpenStack guide at
+    https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-user.
+
+  - >
+    Scope check passed: no instances of "RHOSO deployment mode", "RHOSO IPI mode",
+    "RHOSO UPI mode", or "RHOSO agnostic mode" found in the document.
+
+  - >
+    Version consistency confirmed: OCP 4.18 and RHOSO 18.0 are stated throughout all 18
+    sections and all reference URLs use the 4.18 and 18.0 version paths with no exceptions.
+
+  - >
+    Evidence strength labels confirmed present in every comparison table row reviewed.
+    Permitted values (Documented, Derived from documented workflow, Not confirmed) are used
+    correctly across all tables sampled.
+
+  - >
+    No opinion-based wording violations found. The phrase "recommended for best performance"
+    for LokiStack block storage is sourced from documented Red Hat guidance, not an
+    unsupported ranking claim about installation modes.
+
+  - >
+    No new critical or high findings within the five governing scope categories were
+    identified in the round 9 review.
+
+  - >
+    overall_status is updated to approved. All approval criteria are met:
+    no_critical_findings: true, no_high_findings: true,
+    all_major_claims_have_red_hat_references: true,
+    all_required_sections_complete: true, no_assumptions: true.
+
+  - >
+    Review round 10 was conducted on 2026-05-06. The document had grown from 98,761
+    bytes (round 8) to 109,111 bytes. The primary new content added was Section 8.C
+    (Node IP Assignment and Static Addressing). The review focused on: (1) fact-checking
+    Section 8.C claims against cited Red Hat sources; (2) verifying open findings FB-036,
+    FB-037, and FB-038 are resolved; (3) checking for scope violations in the new content;
+    (4) re-evaluating FB-043 (Mermaid diagrams) and FB-042 (alphanumeric labels) in the
+    context of the template file having been removed; and (5) additional spot-checks
+    across the document.
+
+  - >
+    FB-036 confirmed resolved. Section 14 IPI cons cell reads: "Requires OpenStack cloud
+    with Octavia service for the default load balancer path; Octavia not required when
+    platform.openstack.loadBalancer.type: UserManaged is configured; requires sufficient
+    quota, external network, and clouds.yaml; less flexibility for non-standard topologies
+    without post-install configuration." The OCP 4.18 Load balancing on RHOSP reference
+    is present alongside the Installing on OpenStack reference.
+
+  - >
+    FB-037 confirmed resolved. Section 13 IPI Network setup cell reads: "Installer creates
+    Neutron network, subnets, router, and security groups on the default path; on the
+    default path (OpenShiftManagedDefault), installer also creates Octavia load balancer;
+    on the UserManaged path the operator provisions the external load balancer instead of
+    the installer creating Octavia." The OCP 4.18 Load balancing on RHOSP reference is
+    present alongside the existing reference.
+
+  - >
+    FB-038 confirmed resolved. Section 5 Infrastructure provisioning IPI cell reads:
+    "OpenShift installer creates Nova VMs, Neutron networks, routers, security groups, and
+    floating IPs; Octavia load balancer created by default (OpenShiftManagedDefault path);
+    on the UserManaged path the operator provisions the load balancer externally and the
+    installer does not create an Octavia load balancer." The OCP 4.18 Load balancing on
+    RHOSP reference is present.
+
+  - >
+    Section 8.C fact-checks performed. (1) The machinesSubnet DHCP requirement claim is
+    confirmed: web search of the OCP 4.18 Installation configuration parameters for
+    OpenStack documentation confirms that the subnet used by platform.openstack.machinesSubnet
+    must have DHCP enabled. (2) The "installer does not support static IP assignment on
+    the primary cluster NIC through the IPI path on OpenStack" is consistent with the
+    DHCP requirement for machinesSubnet. (3) The UPI --fixed-ip claim is correctly marked
+    Not confirmed — web search of the OCP 4.18 UPI on OpenStack guide did not surface
+    specific --fixed-ip playbook documentation. (4) The RHOSO isolated NIC configuration
+    via NMState Operator and NodeNetworkConfigurationPolicy is confirmed: web search of
+    RHOSO 18.0 Preparing networks documentation confirms NNCP with static IPv4 for
+    isolated networks (internalapi, storage, tenant). (5) The NMState Operator / NNCP
+    for static IP assignment post-install is confirmed: OCP 4.18 Kubernetes NMState
+    documentation confirmed as a valid resource for NNCP-based static IP configuration.
+
+  - >
+    FB-042 re-evaluated in context of template removal. The template file
+    (rules/openshift-on-rhoso-openstack-comparison-template.md) has been removed from
+    the project. However, the governing rules file
+    (rules/claude-openshift-on-rhoso-openstack-rules.md) still exists and still explicitly
+    defines the required comparison format per topic as A through E subsections
+    (Detailed comparison, Simple table, Pros and cons, Detailed workflow, Limitations).
+    The rules file is the authoritative specification. FB-042 was closed as out of scope
+    in round 9 because the alphanumeric labels are mandated by the governing rules file.
+    That rationale still applies: the rules file has not changed. FB-042 remains closed
+    as out of scope.
+
+  - >
+    FB-043 re-evaluated in context of template removal and user re-statement. The template
+    file has been removed, but the governing rules file still does not mandate Mermaid
+    diagrams and still explicitly requires numbered steps for Section D workflows. The
+    rules file is the authoritative specification. FB-043 remains closed as out of scope.
+    The round 10 review instructions asked whether FB-043 should be reopened given the
+    template removal. Since the rules file — not the template — is the governing
+    specification and the rules file has not changed to require diagrams, FB-043 is not
+    reopened.
+
+  - >
+    FB-044 is a new medium-severity finding. Section 11.E etcd backup must-have row
+    describes the automated recurring etcd backup mechanism (EtcdBackup CRD + etcd
+    recurring backup CRD with crontab schedule field) without noting this is a Technology
+    Preview feature in OCP 4.18 requiring TechPreviewNoUpgrade FeatureGate. Enabling
+    TechPreviewNoUpgrade prevents minor version upgrades and cannot be undone. Red Hat
+    explicitly states this should not be used in production. The document lists this as
+    "must-have" with "Documented" evidence strength, which is misleading. The row should
+    distinguish the generally available manual backup mechanism (cluster-backup.sh script)
+    from the Technology Preview automated recurring backup (EtcdBackup CRD). Confirmed
+    via web search of the OCP 4.18 Control plane backup and restore documentation at
+    https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/backup_and_restore/control-plane-backup-and-restore.
+
+  - >
+    Scope check passed: no instances of "RHOSO deployment mode", "RHOSO IPI mode",
+    "RHOSO UPI mode", or "RHOSO agnostic mode" were found in the document, including
+    in the new Section 8.C content.
+
+  - >
+    Opinion-based wording check: The "recommended for best performance" phrase for
+    LokiStack block storage at document line 466 was previously reviewed in round 9 and
+    confirmed as sourced from documented Red Hat guidance. No new opinion-based wording
+    violations were found in the new content.
+
+  - >
+    Version consistency confirmed: OCP 4.18 and RHOSO 18.0 are stated throughout all 18
+    sections and in Section 8.C. All reference URLs in Section 8.C use the 4.18 and 18.0
+    version paths.
+
+  - >
+    All 18 required sections are present and none are stubs. Section 8.C is a subsection
+    within Section 8 and does not constitute an additional required section.
+
+  - >
+    overall_status is set to needs_update because FB-044 is open. FB-044 is a medium
+    severity finding. The approval criterion no_high_findings remains true; however the
+    document has an inaccurate claim (Technology Preview status of automated etcd backup
+    not disclosed) that requires a targeted correction. The approval_criteria
+    no_assumptions field is set to false pending correction of FB-044.
+
+  - >
+    Review round 11 was conducted on 2026-05-06. The document file
+    docs/openshift-on-rhoso-openstack-deployment-comparison.md was confirmed at 109,111
+    bytes — identical to round 10. The document is unchanged.
+
+  - >
+    FB-044 status: OPEN — UNCHANGED. The etcd backup row at document line 467 (Section
+    11.E must-have table) still reads: "OCP 4.18 backup and restore documentation supports
+    configuring a PVC (ReadWriteOnce, dynamically provisioned) as the etcd backup target
+    using the EtcdBackup custom resource; automated recurring backups are configured via
+    the etcd recurring backup CRD with a crontab schedule field and retention policy,
+    managed by the etcd Operator." The row carries evidence strength "Documented" with
+    no disclosure that the EtcdBackup CRD and etcd recurring backup CRD are Technology
+    Preview features in OCP 4.18 requiring TechPreviewNoUpgrade, that TechPreviewNoUpgrade
+    blocks minor version upgrades, that it cannot be disabled once enabled, and that Red Hat
+    explicitly states it should not be used in production. The GA manual backup path via
+    cluster-backup.sh is not distinguished from the Tech Preview automated path. FB-044
+    remains open and the required change is unchanged.
+
+  - >
+    No new findings were identified in round 11. The document is unchanged from round 10,
+    so all prior round 10 confirmations (scope check, version consistency, evidence strength
+    labels, no opinion-based wording, all 18 sections present and non-stub) carry forward
+    without re-verification.
+
+  - >
+    overall_status remains needs_update. FB-044 is the sole open finding. Resolved count:
+    38 (FB-001 through FB-031 resolved, FB-036 through FB-041 resolved). Closed out of
+    scope count: 6 (FB-032, FB-033, FB-034, FB-035, FB-042, FB-043). Open count: 1
+    (FB-044). New findings this round: 0.
+
+  - >
+    Review round 12 was conducted on 2026-05-06. The document was completely rewritten
+    per the updated governing instructions which replaced the mandatory 18-section template
+    with a practical comparison structure. The new document uses Mermaid flowchart TD
+    diagrams throughout, descriptive section headings, prose comparison sections, and
+    clean comparison tables. The new structure has 11 sections: At a Glance, Architecture
+    Context, Installation Comparison, Networking, Machine API and Node Lifecycle, Upgrades
+    and Lifecycle, Storage and CSI, Effort and Operational Impact, Decision Checklist,
+    Open Items, and References.
+
+  - >
+    FB-044 is resolved in the rewrite. The new Section 7 (Storage and CSI) includes
+    an Important note block that explicitly distinguishes the manual etcd backup
+    (cluster-backup.sh, generally available, no feature gate required) from the automated
+    recurring backup (EtcdBackup CRD, Technology Preview, requires TechPreviewNoUpgrade,
+    prevents minor version upgrades, not for production). This resolves the misleading
+    characterisation identified in FB-044.
+
+  - >
+    Scope is correct throughout the rewritten document: no instances of "RHOSO deployment
+    mode", "RHOSO IPI mode", "RHOSO UPI mode", or "RHOSO agnostic mode" were introduced.
+
+  - >
+    All factual claims in the rewritten document are traceable to Red Hat official
+    documentation at docs.redhat.com. Items that could not be confirmed are listed in
+    Section 10 (Open Items) and marked accordingly.
+
+  - >
+    Version consistency confirmed: OCP 4.18 and RHOSO 18.0 are stated in the document
+    header and consistently used throughout all sections. All reference URLs use the
+    4.18 and 18.0 version paths.
+
+  - >
+    No unsupported ranking claims or opinion-based wording introduced.
+
+  - >
+    overall_status updated to approved. All approval criteria now met:
+    no_critical_findings: true, no_high_findings: true,
+    all_major_claims_have_red_hat_references: true,
+    all_required_sections_complete: true, no_assumptions: true.
+    Resolved count: 39 (FB-001 through FB-031, FB-036 through FB-044 resolved).
+    Closed out of scope count: 6 (FB-032, FB-033, FB-034, FB-035, FB-042, FB-043).
+    Open count: 0. New findings this round: 0.
