@@ -1,6 +1,6 @@
 review_round: 7
 
-overall_status: approved
+overall_status: needs_update
 
 approval_criteria:
   no_critical_findings: true
@@ -745,6 +745,93 @@ feedback:
       been added alongside the existing Installing on OpenStack reference. The internal
       inconsistency within Section 5 is resolved.
 
+  - id: FB-039
+    severity: medium
+    section: "Section 11.E: Block Storage Operations by Category — etcd backup must-have row"
+    issue: >
+      The etcd backup entry in Section 11.E (must-have table) states:
+      "OCP 4.18 backup and restore documentation supports configuring a PVC
+      (ReadWriteOnce, dynamically provisioned) as the etcd backup target using a
+      CronJob-based recurring backup mechanism."
+
+      This description is factually inaccurate. The OCP 4.18 Backup and Restore
+      documentation uses the EtcdBackup custom resource and an etcd-recurring-backups
+      CRD with a schedule field (crontab format), managed by the etcd Operator — not a
+      raw Kubernetes CronJob object. The document incorrectly characterises the mechanism
+      as "CronJob-based."
+
+      Confirmed by web search of the OCP 4.18 backup and restore documentation at
+      https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/backup_and_restore/control-plane-backup-and-restore
+      which describes the EtcdBackup resource with a pvcName field and an
+      etcd-recurring-backups CRD with a spec.etcd.schedule field (crontab syntax)
+      and retention policy, all managed by the etcd Operator. No raw CronJob object
+      is involved in the documented mechanism.
+    required_change: >
+      Correct the etcd backup row description in Section 11.E to:
+      "OCP 4.18 backup and restore documentation supports configuring a PVC
+      (ReadWriteOnce, dynamically provisioned) as the etcd backup target using the
+      EtcdBackup custom resource; automated recurring backups are configured via an
+      etcd recurring backup CRD with a crontab schedule field and retention policy,
+      managed by the etcd Operator."
+
+      Remove the phrase "CronJob-based recurring backup mechanism" from the row.
+      Update the Red Hat reference for this row from [OCP 4.18 Backup and restore —
+      Control plane backup and restore] to the specific URL:
+      https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/backup_and_restore/control-plane-backup-and-restore
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/backup_and_restore/control-plane-backup-and-restore"
+    status: resolved
+    resolution_note: >
+      The etcd backup row in Section 11.E now reads: "OCP 4.18 backup and restore
+      documentation supports configuring a PVC (ReadWriteOnce, dynamically provisioned)
+      as the etcd backup target using the EtcdBackup custom resource; automated recurring
+      backups are configured via the etcd recurring backup CRD with a crontab schedule
+      field and retention policy, managed by the etcd Operator." The phrase
+      "CronJob-based recurring backup mechanism" has been removed. The Red Hat reference
+      remains the OCP 4.18 Backup and restore — Control plane backup and restore URL.
+
+  - id: FB-040
+    severity: medium
+    section: "Section 12.B: Scale-out and machine management table — RHOSO scale-out impact row"
+    issue: >
+      The "RHOSO scale-out impact" row in Section 12.B cites [RHOSO 18.0 Deploying RHOSO
+      at scale] (https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html-single/deploying_rhoso_at_scale/index)
+      for the claim: "Adding RHOCP worker nodes for RHOSO control plane capacity uses
+      MachineSet scaling" (IPI) and "Adding RHOCP worker nodes for RHOSO control plane
+      capacity requires manual provisioning" (UPI/platform-agnostic).
+
+      Web search confirmed that the RHOSO 18.0 Deploying RHOSO at scale guide covers
+      data plane scaling — RHOSO bare-metal data plane nodes, node sets, rack-based
+      node set organization, and introspection batching. It does not discuss adding
+      RHOCP worker nodes for RHOSO control plane capacity. The source is mismatched
+      to the claim being made.
+
+      The correct source for RHOCP worker node preparation in the context of RHOSO
+      control plane is the RHOSO 18.0 Preparing RHOCP for RHOSO chapter:
+      https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso
+    required_change: >
+      Replace the RHOSO scale-out impact row source with the correct reference.
+      If the claim is about adding RHOCP worker nodes for RHOSO control plane capacity,
+      the source must be the RHOSO 18.0 Preparing RHOCP for RHOSO chapter:
+      https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso
+
+      If the "Deploying RHOSO at scale" guide is to be retained anywhere in Section 12,
+      the claim it supports must be scoped to RHOSO data plane node set scaling, not
+      RHOCP worker node management.
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso"
+      - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/assembly_infrastructure-and-system-requirements"
+    status: resolved
+    resolution_note: >
+      The RHOSO scale-out impact row in Section 12.B now cites [RHOSO 18.0 Deploying
+      Red Hat OpenStack Services on OpenShift — Preparing RHOCP for RHOSO] at
+      https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso
+      as the source for the claim about adding RHOCP worker nodes for RHOSO control
+      plane capacity. The "Deploying RHOSO at scale" guide is no longer cited for this
+      row; that guide covers RHOSO data plane node set scaling (bare-metal data plane
+      nodes), which is a different topic. Evidence strength remains "Derived from
+      documented workflow."
+
 reviewer_behavior:
   description: >
     Instructions for how the reviewer agent must conduct each review pass.
@@ -782,6 +869,52 @@ reviewer_behavior:
     - Opinion-based wording without source backing
     - Version consistency (OCP 4.18, RHOSO 18.0)
     - Required sections present and not stubs
+
+  - id: FB-041
+    severity: high
+    section: "Section 6.D: UPI Installation Workflow / Section 8: Networking"
+    issue: >
+      The document does not cover how to configure static IP addresses on UPI nodes.
+      In a UPI deployment on OpenStack, the operator controls all network resource
+      provisioning. Static IP assignment is a common and important operational
+      requirement — particularly for RHOSO, where worker nodes need stable IPs for
+      isolated network interfaces. The current UPI workflow and networking sections
+      describe Neutron port creation and NMState configuration but do not explain
+      how to set a static IP on a node at boot time via Ignition or NMState.
+    required_change: >
+      Add a dedicated subsection in Section 6.D (UPI workflow) and/or Section 8
+      (Networking) covering static IP configuration for UPI nodes. The subsection must:
+
+      1. Explain that in UPI on OpenStack, the operator creates Neutron ports and
+         assigns fixed IPs to those ports before booting the node. The Nova instance
+         is attached to the port with the fixed IP already set in Neutron — this is
+         the primary mechanism for static IP on OpenStack-hosted UPI nodes.
+
+      2. Explain the NMState / MachineConfig path for configuring the network interface
+         inside the RHCOS node (e.g. setting static IP via NMState NodeNetworkConfigurationPolicy
+         or via a MachineConfig that writes a NetworkManager keyfile). This is required
+         for RHOSO isolated networks where the node needs additional NICs with static IPs
+         beyond what Neutron DHCP provides.
+
+      3. Describe the Ignition network config path if Red Hat documentation covers it
+         (static IP via Ignition networkd or NM config files in the bootstrap phase).
+
+      4. Cover all three installation modes with a comparison note:
+         - IPI: static IPs not directly configurable at install time (installer uses
+           DHCP from Neutron); post-install static addressing requires NMState.
+         - UPI: operator creates Neutron ports with fixed_ips set before booting;
+           additional NICs configured via NMState or MachineConfig post-install.
+         - Platform-agnostic: no OpenStack port management; static IPs set entirely
+           via NMState, MachineConfig, or Ignition network config.
+
+      5. Each method must cite the appropriate Red Hat source or be marked
+         "Needs Red Hat source verification."
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-user"
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/networking/index"
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index"
+      - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/plan-networks_planning"
+    status: open
 
 notes:
   - >
@@ -841,6 +974,18 @@ notes:
     path. The UserManaged / OpenShiftManagedDefault options are confirmed as documented
     in OCP 4.18.
   - >
-    The overall_status remains needs_update because FB-036 (high severity) and FB-037
-    and FB-038 (medium severity) are open. The approval criteria require no high findings
-    before overall_status can be set to approved.
+    FB-039 is a new finding added in round 7 reviewer pass. Section 11.E (etcd backup
+    must-have row) incorrectly describes the OCP 4.18 etcd backup mechanism as
+    "CronJob-based." The actual mechanism uses the EtcdBackup CRD and an
+    etcd-recurring-backups CRD with a schedule field managed by the etcd Operator.
+    Confirmed via web search of the OCP 4.18 Backup and restore documentation.
+  - >
+    FB-040 is a new finding added in round 7 reviewer pass. The Section 12.B RHOSO
+    scale-out impact row cites the RHOSO 18.0 Deploying RHOSO at scale guide for a
+    claim about adding RHOCP worker nodes for RHOSO control plane capacity. Web search
+    confirmed that guide covers data plane node set scaling (bare-metal nodes, rack-based
+    provisioning), not RHOCP worker node addition for control plane capacity. The source
+    is mismatched. The correct source is the RHOSO 18.0 Preparing RHOCP for RHOSO chapter.
+  - >
+    overall_status is updated to needs_update because FB-039 and FB-040 are open medium
+    findings found in the independent reviewer fact-check pass for round 7.
