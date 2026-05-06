@@ -1,0 +1,17 @@
+review_round: 0
+
+overall_status: not_reviewed
+
+approval_criteria:
+
+  no_critical_findings: true
+
+  no_high_findings: true
+
+  all_major_claims_have_red_hat_references: true
+
+  all_required_sections_complete: true
+
+  no_assumptions: true
+
+feedback: []
