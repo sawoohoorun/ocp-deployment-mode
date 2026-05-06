@@ -18,9 +18,9 @@ The table below summarises the six most decision-relevant differences between th
 |---|---|---|---|
 | Who provisions infrastructure | OpenShift installer | Operator (using Ansible playbooks) | Operator (fully manual) |
 | Load balancer responsibility | Installer provisions Octavia LB by default (OpenShiftManagedDefault); operator provisions external LB on UserManaged path | Operator provisions LB before installation | Operator provisions LB before installation |
-| Machine API availability | Available; MachineSets can scale Nova VMs automatically | Not confirmed for automated MachineSet scaling on UPI OpenStack clusters | Not available (platform type `none`) |
+| Machine API availability | Available; MachineSets can scale Nova VMs automatically | UPI installations do not have machine sets ([OCP 4.18 Machine management](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/managing-user-provisioned-infrastructure-manually)) | Not available (platform type `none`) |
 | Node scale-out method | `oc scale machineset --replicas=N` | Operator creates Nova VM, boots RHCOS, approves CSRs | Operator creates VM, boots RHCOS, approves CSRs |
-| CSI storage (Cinder / Manila) | Cinder CSI installed automatically; Manila CSI installed automatically when Manila service is enabled | Not confirmed as auto-installed — see Section 10 | Not confirmed as auto-installed — see Section 10 |
+| CSI storage (Cinder / Manila) | Cinder CSI installed automatically; Manila CSI installed automatically when Manila service is enabled | Red Hat documentation states CSI drivers install on "any OpenStack cluster"; whether this explicitly covers UPI-installed clusters is an open item — see Section 10 | Not auto-installed (platform type `none` has no OpenStack provider integration) |
 | Key prerequisite | clouds.yaml, external network, sufficient quota; Octavia service (default path) or external LB (UserManaged path) | clouds.yaml, external network, Ansible collections, pre-provisioned LB and DNS | HTTP/HTTPS Ignition server, pre-provisioned LB, DNS, and all infrastructure |
 
 ---
@@ -61,7 +61,7 @@ RHOSO deployment begins only after the RHOCP cluster is operational. The RHOSO O
 
 The installation approach used for RHOCP does not change this sequence, but it does determine whether Machine API is available for ongoing RHOCP node management and whether OpenStack CSI drivers are installed automatically.
 
-Sources: [RHOSO 18.0 — Installing and preparing the OpenStack Operator](https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-openstack-operator); [RHOSO 18.0 — Infrastructure and system requirements](https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/assembly_infrastructure-and-system-requirements).
+Sources: [RHOSO 18.0 — Installing and preparing the Operators](https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-operators); [RHOSO 18.0 — Infrastructure and system requirements](https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/assembly_infrastructure-and-system-requirements).
 
 ---
 
@@ -73,7 +73,7 @@ Sources: [RHOSO 18.0 — Installing and preparing the OpenStack Operator](https:
 
 With installer-provisioned infrastructure, the OpenShift installation program provisions OpenStack resources directly by calling OpenStack APIs on behalf of the operator. The installer reads a `clouds.yaml` file and an `install-config.yaml` file, then creates Neutron networks, subnets, routers, security groups, floating IPs, a bootstrap Nova VM, three control plane Nova VMs, and worker Nova VMs. On the default load balancer path (`OpenShiftManagedDefault`), the installer also creates an Octavia load balancer for the API and Ingress endpoints. On the `UserManaged` path, the operator provisions the load balancer externally before running the installer and sets `platform.openstack.loadBalancer.type: UserManaged` in `install-config.yaml`, in which case the installer does not create an Octavia load balancer.
 
-The bootstrap VM is destroyed automatically after the control plane is healthy. Worker VMs are registered with Machine API after installation, meaning MachineSets can be used to scale the compute plane.
+The bootstrap VM is destroyed automatically after the control plane is healthy. Machine API is fully available after IPI installation, and MachineSets can be used to scale the compute plane by provisioning new Nova VMs.
 
 Source: [OCP 4.18 — Installing a cluster on OpenStack with customizations](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom); [OCP 4.18 — Load balancing on RHOSP](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack).
 
@@ -102,7 +102,7 @@ Source: [OCP 4.18 — Installing a cluster on any platform](https://docs.redhat.
 | Create Nova VMs (bootstrap, control plane, workers) | Installer | Operator | Operator |
 | Create Neutron network / subnet / router | Installer | Operator (Ansible playbooks available) | Operator |
 | Create security groups | Installer | Operator (Ansible playbooks available) | Operator |
-| Upload RHCOS image to Glance | Installer | Operator | N/A (no Glance integration) |
+| Upload RHCOS image to Glance | Not confirmed in the referenced Red Hat documentation whether the installer uploads RHCOS automatically or uses a pre-uploaded image | Operator | N/A (no Glance integration) |
 | Provision load balancer (API + Ingress) | Installer creates Octavia LB (default path) or Operator provisions external LB (UserManaged path) | Operator | Operator |
 | Configure DNS records | Installer | Operator | Operator |
 | Generate Ignition configs | Installer (internal) | Installer (`openshift-install create ignition-configs`) | Installer (`openshift-install create ignition-configs`) |
@@ -118,7 +118,7 @@ Sources: [OCP 4.18 — Installing on OpenStack with customizations](https://docs
 flowchart TD
     A["Prepare install-config.yaml\nand clouds.yaml"] --> B["Run: openshift-install create cluster"]
     B --> C["Installer calls OpenStack APIs:\nNeutron network, subnet, router,\nsecurity groups, floating IPs"]
-    C --> D["Installer uploads RHCOS image\nto Glance"]
+    C --> D["RHCOS image available in Glance\n(auto-upload not confirmed)"]
     D --> E{"LoadBalancer type?"}
     E -->|"OpenShiftManagedDefault\n(default)"| F["Installer creates\nOctavia load balancer"]
     E -->|"UserManaged\n(pre-provisioned by operator)"| G["Operator LB already\nprovisioned externally"]
@@ -127,7 +127,7 @@ flowchart TD
     H --> I["Installer creates 3x\ncontrol plane Nova VMs"]
     I --> J["Bootstrap completes;\nInstaller destroys bootstrap VM"]
     J --> K["Installer creates\nworker Nova VMs"]
-    K --> L["Machine API registers workers;\nCSRs approved automatically"]
+    K --> L["Machine API manages workers;\nCSRs approved automatically"]
     L --> M["Cluster ready"]
 ```
 
@@ -140,8 +140,8 @@ Sources: [OCP 4.18 — Installing on OpenStack with customizations](https://docs
 ```mermaid
 flowchart TD
     A["Prepare install-config.yaml,\nclouds.yaml, inventory.yaml"] --> B["Run: openshift-install create ignition-configs"]
-    B --> C["Operator runs Ansible playbooks:\ncreate security groups, networks,\nsubnets, routers, ports"]
-    C --> D["Operator provisions\nload balancer and DNS records"]
+    B --> C["Operator provisions\nload balancer and DNS records"]
+    C --> D["Operator runs Ansible playbooks:\ncreate security groups, networks,\nsubnets, routers, ports"]
     D --> E["Operator creates\nbootstrap Nova VM\n(boot RHCOS with bootstrap Ignition)"]
     E --> F["Operator creates 3x\ncontrol plane Nova VMs\n(boot RHCOS with control-plane Ignition)"]
     F --> G["Wait: openshift-install\nwait-for bootstrap-complete"]
@@ -201,7 +201,7 @@ Sources: [OCP 4.18 — Installing on OpenStack with customizations](https://docs
 | IPI | Installer controls network topology; non-standard topologies require post-install configuration | Limits network customisation during install |
 | IPI | OpenStack quota must accommodate all installer-created resources (Nova, Neutron, Cinder, Octavia) | Quota planning must be done before running the installer |
 | UPI | Operator is responsible for all OpenStack resource creation and lifecycle | Increases pre-install effort; errors in Ansible inventory or playbooks can cause installation failure |
-| UPI | Automated MachineSet-based scaling not confirmed for UPI OpenStack clusters | Node scaling requires manual Nova VM provisioning and CSR approval |
+| UPI | UPI installations do not have machine sets (per OCP 4.18 Machine management documentation) | Node scaling requires manual Nova VM provisioning and CSR approval |
 | Platform-agnostic | Platform type `none`; Machine API not available | All node lifecycle operations are manual |
 | Platform-agnostic | No OpenStack provider integration; Cinder and Manila CSI auto-installation not confirmed | Persistent storage for workloads requires manual CSI driver configuration |
 
@@ -214,7 +214,7 @@ Sources: [OCP 4.18 — Installing on OpenStack with customizations](https://docs
 | Mode | Pros | Cons |
 |---|---|---|
 | IPI | Installer automates Nova VM creation, Neutron networking, floating IPs, and (default path) Octavia LB; Machine API available after install for automated scaling and node replacement; Cinder and Manila CSI installed automatically on OpenStack clusters | Requires Octavia (default path) or pre-provisioned external LB (UserManaged); less flexibility for custom network topologies during install; OpenStack quota must cover all installer-created resources |
-| UPI | Operator controls all OpenStack resources; integration with existing network topology is possible; Octavia is not required | Higher pre-install effort; operator must correctly configure Ansible inventory and playbooks; automated MachineSet scaling not confirmed; manual CSR approval required |
+| UPI | Operator controls all OpenStack resources; integration with existing network topology is possible; Octavia is not required | Higher pre-install effort; operator must correctly configure Ansible inventory and playbooks; UPI installations do not have machine sets; manual CSR approval required |
 | Platform-agnostic | No dependency on OpenStack-specific credentials or APIs during install; suitable for disconnected or restrictive environments | No OpenStack provider integration; Machine API not available; Cinder and Manila CSI auto-installation not confirmed; all infrastructure lifecycle is manual; highest pre-install and day-2 operational effort |
 
 Sources: [OCP 4.18 — Installation overview](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installation_overview/ocp-installation-overview); [OCP 4.18 — Installing on OpenStack with customizations](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom); [OCP 4.18 — Installing on any platform](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_any_platform/installing-platform-agnostic).
@@ -232,8 +232,8 @@ OpenShift on OpenStack supports two load balancer paths. The path is selected in
 ```mermaid
 flowchart LR
     Client["External client"] --> FIP["Floating IP\n(OpenStack Neutron)"]
-    FIP -->|"OpenShiftManagedDefault\nIPI default path"| OCT["Octavia load balancer\n(Amphora or OVN provider)"]
-    FIP -->|"UserManaged\napplies to all modes"| EXT["Operator-provisioned\nexternal load balancer\n(e.g. HAProxy)"]
+    FIP -->|"OpenShiftManagedDefault\nIPI only — installer-managed"| OCT["Octavia load balancer\n(Amphora or OVN provider)"]
+    FIP -->|"UserManaged\nIPI alternative path;\nonly path for UPI and platform-agnostic"| EXT["Operator-provisioned\nexternal load balancer\n(e.g. HAProxy)"]
     OCT --> API["API server\n:6443"]
     OCT --> MCS["Machine config server\n:22623"]
     OCT --> ING["Ingress\n:443 / :80"]
@@ -242,7 +242,7 @@ flowchart LR
     EXT --> ING
 ```
 
-On the `OpenShiftManagedDefault` path, the installer (IPI) provisions and manages an Octavia load balancer. OpenShift Container Platform clusters on RHOSP use Octavia to handle load balancer services, and Octavia supports both the Amphora and OVN providers. On the `UserManaged` path, the operator provisions and manages the load balancer before installing. The `UserManaged` path applies to all three installation modes.
+On the `OpenShiftManagedDefault` path, the installer (IPI only) provisions and manages an Octavia load balancer. OpenShift Container Platform clusters on RHOSP use Octavia to handle load balancer services, and Octavia supports both the Amphora and OVN providers. On the `UserManaged` path, the operator provisions and manages the load balancer before installing. For UPI and platform-agnostic installations, the operator-provisioned load balancer is the only available path — there is no `OpenShiftManagedDefault` path for those modes.
 
 Source: [OCP 4.18 — Load balancing on RHOSP](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack).
 
@@ -281,7 +281,7 @@ The following DNS records are required by all installation modes. On IPI, the in
 | `api-int.<cluster>.<domain>` | A (or CNAME) | Internal API access from cluster nodes |
 | `*.apps.<cluster>.<domain>` | Wildcard A (or CNAME) | Application Ingress for all routes |
 
-Source: [OCP 4.18 — Installing on OpenStack on your own infrastructure](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-user).
+Sources: [OCP 4.18 — Installing on OpenStack on your own infrastructure](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-user) (UPI); [OCP 4.18 — Installing a cluster on OpenStack with customizations](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom) (IPI); [OCP 4.18 — Installing a cluster on any platform](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_any_platform/installing-platform-agnostic) (platform-agnostic).
 
 ---
 
@@ -303,7 +303,7 @@ Understanding Machine API availability is important for anyone planning day-2 op
 
 ### Availability by mode
 
-Machine API is available on IPI-installed OpenStack clusters. It is not available on clusters with platform type `none`, which includes platform-agnostic installations. For UPI on OpenStack, the cluster platform type is `openstack`, but automated MachineSet-based scaling is not confirmed for the UPI installation path in the referenced Red Hat documentation.
+Machine API is available on IPI-installed OpenStack clusters. It is not available on clusters with platform type `none`, which includes platform-agnostic installations. For UPI on OpenStack, the OCP 4.18 Machine management documentation states that user-provisioned infrastructure installations do not have machine sets. Advanced machine management on UPI clusters requires additional validation and configuration.
 
 Source: [OCP 4.18 — Machine management: Managing user-provisioned infrastructure manually](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/managing-user-provisioned-infrastructure-manually).
 
@@ -349,13 +349,28 @@ flowchart LR
 
 Sources: [OCP 4.18 — Manually scaling a compute machine set](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/manually-scaling-machineset); [OCP 4.18 — Managing user-provisioned infrastructure manually](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/managing-user-provisioned-infrastructure-manually).
 
+### 5.5 Container Runtime and Node Configuration
+
+The Machine Config Operator (MCO) manages CRI-O, kubelet, kernel parameters, and systemd unit configuration on all cluster nodes across all three installation modes. Operators apply node configuration by creating MachineConfig, KubeletConfig, or ContainerRuntimeConfig custom resources. The MCO renders these into a final MachineConfig, then applies the change to each node in the relevant MachineConfigPool by cordoning the node, draining workloads, applying the new configuration, and rebooting the node. By default, the MCO processes one node at a time per pool (`maxUnavailable: 1`).
+
+The MCO behavior is identical across IPI, UPI, and platform-agnostic installations once the cluster is operational. The key operational difference is what happens when a node fails during an MCO-driven reboot: on IPI clusters, Machine API can automatically provision a replacement Nova VM; on UPI and platform-agnostic clusters, the operator must provision the replacement manually.
+
+| Aspect | IPI | UPI | Platform-agnostic |
+|---|---|---|---|
+| MCO manages CRI-O, kubelet, kernel, systemd | Yes | Yes | Yes |
+| MachineConfig / KubeletConfig / ContainerRuntimeConfig apply | Yes | Yes | Yes |
+| Default maxUnavailable per MachineConfigPool | 1 | 1 | 1 |
+| Auto node replacement if reboot fails | Machine API provisions replacement Nova VM automatically | Operator provisions replacement manually | Operator provisions replacement manually |
+
+Source: [OCP 4.18 — Machine configuration](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index).
+
 ### Machine API comparison table
 
 | Capability | IPI | UPI | Platform-agnostic |
 |---|---|---|---|
-| MachineSet scaling (`oc scale machineset`) | Available | Not confirmed for automated MachineSet-based scaling | Not available (platform type `none`) |
+| MachineSet scaling (`oc scale machineset`) | Available | UPI installations do not have machine sets | Not available (platform type `none`) |
 | Automatic CSR approval for new workers | Available via Machine API | Operator must approve manually | Operator must approve manually |
-| MachineHealthCheck (auto node replacement) | Available | Not confirmed | Not available |
+| MachineHealthCheck (auto node replacement) | Available | Not available (UPI installations do not have machine sets) | Not available |
 | Manual steps to scale out one worker | None after MachineSet creation | Create Nova VM, boot RHCOS, approve CSRs | Create VM, boot RHCOS, approve CSRs |
 
 Sources: [OCP 4.18 — Machine management](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_management/index); [OCP 4.18 — Managing user-provisioned infrastructure manually](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/managing-user-provisioned-infrastructure-manually).
@@ -386,8 +401,9 @@ flowchart TD
     APPLY -->|"Node fails to return\nafter reboot"| FAIL{"Machine API\navailable?"}
     FAIL -->|"Yes — IPI"| REPLACE["Machine API provisions\nreplacement Nova VM automatically"]
     FAIL -->|"No — UPI / agnostic"| MANUAL["Operator provisions\nreplacement VM manually"]
-    REPLACE --> UNCORDON
-    MANUAL --> UNCORDON
+    REPLACE --> NEWNODE["New node joins cluster ready"]
+    MANUAL --> NEWNODE
+    NEWNODE --> MORE
 ```
 
 Sources: [OCP 4.18 — Updating clusters](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/updating_clusters/index); [OCP 4.18 — Machine configuration](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index).
@@ -434,7 +450,7 @@ flowchart TD
 
 OpenShift Container Platform installs the OpenStack Cinder CSI Driver Operator and the OpenStack Cinder CSI driver in the `openshift-cluster-csi-drivers` namespace on OpenStack clusters. OpenShift Container Platform also installs the Manila CSI Driver Operator and the Manila CSI driver by default on any OpenStack cluster that has the Manila service enabled; if Manila is not enabled in the OpenStack environment, the Manila CSI driver is not installed and the storage classes for Manila are not created.
 
-Whether auto-installation of Cinder and Manila CSI drivers applies to UPI clusters with OpenStack credentials (as distinct from IPI clusters) is not confirmed in the referenced Red Hat documentation — see Section 10.
+The Red Hat documentation uses the phrase "any OpenStack cluster" for CSI driver auto-installation. Whether this phrase explicitly includes UPI-installed clusters (which also carry platform type `openstack`) is an open item listed in Section 10. For platform-agnostic installations (platform type `none`), there is no OpenStack provider integration and CSI drivers are not auto-installed.
 
 Source: [OCP 4.18 — Storage: Using Container Storage Interface (CSI)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/storage/using-container-storage-interface-csi).
 
@@ -450,7 +466,7 @@ Source: [RHOSO 18.0 — Infrastructure and system requirements](https://docs.red
 
 | Use case | Notes | IPI (Cinder CSI) | UPI / Platform-agnostic |
 |---|---|---|---|
-| PVCs for stateful RHOSO services (databases, message queues, service logs) | RHOSO 18.0 requires 150 GB PV pool minimum | Auto-provisioned via Cinder CSI | Requires CSI driver installation; not confirmed as auto-installed |
+| PVCs for stateful RHOSO services (databases, message queues, service logs) | RHOSO 18.0 requires 150 GB PV pool minimum | Auto-provisioned via Cinder CSI | UPI: Red Hat source states "any OpenStack cluster" (open item — see Section 10); platform-agnostic: requires manual CSI driver installation |
 | Internal image registry | OpenShift internal registry requires persistent storage in production clusters | Cinder CSI provides block PVC | Requires CSI or object storage configuration |
 | Prometheus and Alertmanager | Default monitoring stack writes to PVCs | Cinder CSI provides block PVC | Requires CSI driver |
 | etcd backup (manual) | Manual backup via `cluster-backup.sh` script can target a PVC; no feature gate required; this is the generally available mechanism | Cinder CSI block PVC usable | Requires CSI driver or manual backup to other destination |
@@ -463,18 +479,16 @@ Source: [OCP 4.18 — Backup and restore: Control plane backup and restore](http
 
 | Use case | Notes |
 |---|---|
-| LokiStack (OpenShift Logging) | Block storage is documented as improving performance for log storage |
-| OpenShift Pipelines artifact storage | Benefits from persistent volumes for artifact caching |
-| OpenShift Virtualization (if deployed on RHOCP) | Requires block storage for VM disk images |
-
-Source: [OCP 4.18 — Storage: Using Container Storage Interface (CSI)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/storage/using-container-storage-interface-csi).
+| LokiStack (OpenShift Logging) | Not confirmed in the referenced Red Hat documentation — see Section 10 |
+| OpenShift Pipelines artifact storage | Not confirmed in the referenced Red Hat documentation — see Section 10 |
+| OpenShift Virtualization (if deployed on RHOCP) | Not confirmed in the referenced Red Hat documentation — see Section 10 |
 
 ### CSI comparison table
 
 | Aspect | IPI | UPI | Platform-agnostic |
 |---|---|---|---|
-| Cinder CSI driver | Installed automatically on OpenStack clusters | Not confirmed as auto-installed | Not confirmed as auto-installed |
-| Manila CSI driver | Installed automatically when Manila service is enabled | Not confirmed as auto-installed | Not confirmed as auto-installed |
+| Cinder CSI driver | Installed automatically on OpenStack clusters | Red Hat source states "any OpenStack cluster"; explicit confirmation for UPI path is an open item — see Section 10 | Not auto-installed (platform type `none`) |
+| Manila CSI driver | Installed automatically when Manila service is enabled | Red Hat source states "any OpenStack cluster"; explicit confirmation for UPI path is an open item — see Section 10 | Not auto-installed (platform type `none`) |
 | Manila CSI protocol support | NFS only | NFS only (if installed) | NFS only (if installed) |
 | Default StorageClass | Created automatically (standard-csi via Cinder) | Requires manual creation if not auto-installed | Requires manual creation |
 
@@ -524,7 +538,7 @@ The following questions identify factors that distinguish the installation appro
 | Is the environment disconnected or does it restrict outbound connectivity for the installation program during install? | If yes, platform-agnostic may be appropriate, as it does not require the installer to reach OpenStack APIs. |
 | Is 150 GB of persistent volume capacity available on the RHOCP cluster for RHOSO? | Required for all modes. Cinder CSI is auto-installed on IPI OpenStack clusters, simplifying PV provisioning. UPI and platform-agnostic may require manual CSI driver configuration. |
 | Do worker nodes require dedicated NICs for RHOSO isolated networks (ctlplane, storage, internalapi, tenant)? | NMState Operator with NodeNetworkConfigurationPolicy is required post-install for all three modes. This step is independent of the OpenShift installation approach. |
-| Is the RHOCP version explicitly 4.18? | RHOSO 18.0 requires RHOCP 4.18. All three installation approaches produce a 4.18 cluster when using the 4.18 OpenShift installer. |
+| Is the RHOCP version explicitly 4.18? | RHOSO 18.0.6 and later require RHOCP 4.18. Earlier RHOSO 18.0.x releases require RHOCP 4.16. All three installation approaches produce the required RHOCP version when using the matching OpenShift installer. Source: [RHOSO 18.0 — Infrastructure and system requirements](https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/assembly_infrastructure-and-system-requirements). |
 
 ---
 
@@ -540,6 +554,9 @@ The following claims could not be confirmed from the referenced Red Hat official
 | Whether static IP assignment at the Ignition level is supported for platform-agnostic installation on OpenStack-hosted VMs | OCP 4.18 — Installing on any platform — network configuration at boot time for OpenStack VMs |
 | Whether Machine API is partially available on UPI OpenStack clusters (for example, MachineConfig but not MachineSet) | OCP 4.18 — Machine management — explicit statement about platform type `openstack` UPI cluster capabilities |
 | Whether OLM manages the ongoing upgrade lifecycle of the RHOSO OpenStack Operator (subscription auto-update vs manual approval) | RHOSO 18.0 — Deploying Red Hat OpenStack Services on OpenShift — Operator lifecycle management after initial installation |
+| Whether LokiStack (OpenShift Logging) block storage requirement is documented as improving log storage performance | OCP 4.18 — Logging documentation — LokiStack storage requirements |
+| Whether OpenShift Pipelines artifact storage benefits from persistent volumes for artifact caching | OCP 4.18 — OpenShift Pipelines documentation — artifact storage configuration |
+| Whether OpenShift Virtualization requires block storage for VM disk images | OCP 4.18 — OpenShift Virtualization documentation — storage requirements for VM disk images |
 
 ---
 
@@ -564,6 +581,6 @@ The following claims could not be confirmed from the referenced Red Hat official
 | RHOSO 18.0: Infrastructure and system requirements | RHOSO 18.0 | https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/assembly_infrastructure-and-system-requirements | 150 GB PV pool minimum; RHOCP 4.18 requirement; storage class recommendations; LVM Storage Operator |
 | RHOSO 18.0: Planning your networks | RHOSO 18.0 | https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/plan-networks_planning | Isolated network planning; ctlplane, storage, internalapi, tenant networks; VLAN design |
 | RHOSO 18.0: Preparing networks | RHOSO 18.0 | https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhoso-networks_preparing | NMState Operator; NodeNetworkConfigurationPolicy with static IPv4; NetworkAttachmentDefinitions |
-| RHOSO 18.0: Installing and preparing the OpenStack Operator | RHOSO 18.0 | https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-openstack-operator | RHOSO Operator installation via OLM / OperatorHub; Subscription and OperatorGroup CRs |
+| RHOSO 18.0: Installing and preparing the Operators | RHOSO 18.0 | https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-operators | RHOSO Operator installation via OLM / OperatorHub; Subscription and OperatorGroup CRs |
 | RHOSO 18.0: Preparing RHOCP for RHOSO | RHOSO 18.0 | https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhocp-for-rhoso | RHOCP worker node preparation for RHOSO control plane capacity |
 | RHOSO 18.0: Deploying Red Hat OpenStack Services on OpenShift | RHOSO 18.0 | https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html-single/deploying_red_hat_openstack_services_on_openshift/index | RHOSO deployment sequence on operational RHOCP cluster; RHOSO architecture |
