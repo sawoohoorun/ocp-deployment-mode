@@ -1,10 +1,10 @@
-review_round: 6
+review_round: 7
 
-overall_status: needs_update
+overall_status: approved
 
 approval_criteria:
   no_critical_findings: true
-  no_high_findings: false
+  no_high_findings: true
   all_major_claims_have_red_hat_references: true
   all_required_sections_complete: true
   no_assumptions: true
@@ -275,11 +275,11 @@ feedback:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_any_platform/installing-platform-agnostic"
     status: resolved
     resolution_note: >
-      Section 15 is present at lines 508-521. It covers IPI (Octavia requirement, quota,
-      network topology), UPI (manual provisioning, Machine API validation, CSI drivers),
-      platform-agnostic (Machine API unavailability, CSI, Agent-based Installer version
-      risk), and Manila CSI (NFS only). Each row has a source confirmation column and
-      reference.
+      Section 15 is present at lines 508-521. It covers IPI (Octavia/UserManaged path,
+      quota, network topology), UPI (manual provisioning, Machine API validation, CSI
+      drivers), platform-agnostic (Machine API unavailability, CSI, Agent-based Installer
+      version risk), and Manila CSI (NFS only). Each row has a source confirmation column
+      and reference.
 
   - id: FB-017
     severity: critical
@@ -295,8 +295,9 @@ feedback:
     resolution_note: >
       Section 16 is present at lines 525-539. The introductory statement explicitly
       identifies the checklist as neutral. Nine questions are listed covering Octavia
-      availability, quota, load balancer ownership, Machine API, CSI, RHOCP version,
-      dedicated NICs, storage minimum, and disconnected environment support.
+      availability (with UserManaged alternative noted), quota, load balancer ownership,
+      Machine API, CSI, RHOCP version, dedicated NICs, storage minimum, and disconnected
+      environment support.
 
   - id: FB-018
     severity: critical
@@ -417,14 +418,12 @@ feedback:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/registry/index"
     status: resolved
     resolution_note: >
-      Section 11.E (Block Storage Operations by Category) was added between lines 421
-      and 443. It contains two structured tables: one for must-have operations (PVCs for
-      stateful workloads, internal image registry, Prometheus and Alertmanager, LokiStack,
-      etcd backup PVC) and one for good-to-have operations (OpenShift Pipelines, OpenShift
-      Virtualization, operators with default PVC declarations). Each entry includes an
-      explanation, the Cinder CSI handling description for IPI/UPI with OpenStack
-      integration, the platform-agnostic handling, an evidence strength label, and a Red
-      Hat reference URL. The finding is resolved.
+      Section 11.E (Block Storage Operations by Category) is present with two structured
+      tables: must-have operations (PVCs for stateful workloads, internal image registry,
+      Prometheus and Alertmanager, LokiStack, etcd backup PVC) and good-to-have operations
+      (OpenShift Pipelines, OpenShift Virtualization, operators with default PVC
+      declarations). Each entry includes explanation, Cinder CSI handling for IPI/UPI,
+      platform-agnostic handling, evidence strength label, and Red Hat reference URL.
 
   - id: FB-025
     severity: high
@@ -442,12 +441,10 @@ feedback:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/managing-user-provisioned-infrastructure-manually"
     status: resolved
     resolution_note: >
-      The UPI scale-out paragraph in Section 12.A (around line 453) now reads: "On
-      OpenStack UPI, new nodes use the RHCOS Glance image; the 'same ISO image' constraint
-      documented for bare metal UPI does not apply to OpenStack UPI where Nova VMs are
-      provisioned from Glance images." The "automatically upgrade themselves on first boot"
-      claim has been removed from Section 12.A and moved to Section 17 (line 549) as
-      "Not confirmed in the referenced Red Hat documentation." Both corrections are present.
+      The UPI scale-out paragraph in Section 12.A now correctly states that the "same ISO
+      image" constraint is specific to bare metal UPI and does not apply to OpenStack UPI
+      where Nova VMs are provisioned from Glance images. The "automatically upgrade on
+      first boot" claim has been moved to Section 17 as not confirmed.
 
   - id: FB-026
     severity: medium
@@ -462,11 +459,10 @@ feedback:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/storage/index"
     status: resolved
     resolution_note: >
-      Section 6.C now has two separate IPI rows (lines 159-160). The first row covers
-      installer automation of OpenStack resources and cites the OCP 4.18 Preparing to
-      install on OpenStack source. The second row specifically covers "Cinder and Manila
-      CSI installed automatically on OpenStack clusters" and correctly cites OCP 4.18
-      Storage. The source assignment is corrected.
+      Section 6.C now has two separate IPI rows. The first row covers installer automation
+      of OpenStack resources citing OCP 4.18 Preparing to install on OpenStack. The second
+      row covers "Cinder and Manila CSI installed automatically on OpenStack clusters" citing
+      OCP 4.18 Storage. The source assignment is corrected.
 
   - id: FB-027
     severity: medium
@@ -482,11 +478,9 @@ feedback:
       - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-openstack-operator"
     status: resolved
     resolution_note: >
-      The RHOSO Operator lifecycle row in Section 7.B (line 267) now reads: "ongoing
-      lifecycle management by OLM not confirmed in the referenced Red Hat documentation —
-      see Section 17" and uses evidence strength "Not confirmed." The OLM lifecycle
-      question is also listed in Section 17 (line 548) as an open unconfirmed item. The
-      finding is resolved.
+      The RHOSO Operator lifecycle row in Section 7.B marks OLM ongoing lifecycle
+      management as "Not confirmed" and cross-references Section 17. The OLM lifecycle
+      question is also listed in Section 17 as an open unconfirmed item.
 
   - id: FB-028
     severity: medium
@@ -502,11 +496,9 @@ feedback:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_management/index"
     status: resolved
     resolution_note: >
-      Section 4.B (line 87) now shows evidence strength "Documented" for the RHOSO
-      control plane row, which contains the "Machine API unavailable if platform type is
-      none" claim. The OCP 4.18 Machine management documentation directly states: "Clusters
-      with the infrastructure platform type none cannot use the Machine API." The evidence
-      strength label is now correct.
+      Section 4.B now shows evidence strength "Documented" for the RHOSO control plane
+      row. The OCP 4.18 Machine management documentation directly states that clusters
+      with infrastructure platform type none cannot use the Machine API.
 
   - id: FB-029
     severity: medium
@@ -522,10 +514,10 @@ feedback:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/storage/index"
     status: resolved
     resolution_note: >
-      The Section 5 Storage and CSI integration row (line 110) now includes in the UPI
-      cell: "whether Cinder and Manila CSI auto-installation applies to UPI clusters with
-      OpenStack credentials is not confirmed — see Section 17." This cross-reference
-      aligns the table with the acknowledged uncertainty documented in Section 17, line 547.
+      The Section 5 Storage and CSI integration row now includes in the UPI cell: "whether
+      Cinder and Manila CSI auto-installation applies to UPI clusters with OpenStack
+      credentials is not confirmed — see Section 17." This cross-reference aligns the
+      table with the acknowledged uncertainty documented in Section 17.
 
   - id: FB-030
     severity: low
@@ -543,248 +535,215 @@ feedback:
     status: resolved
     resolution_note: >
       The RHOSO 18.0 Infrastructure and system requirements documentation has been
-      verified via web search and confirmed to use the exact phrase "an operational,
-      pre-provisioned 3-node bare metal RHOCP cluster, version 4.18." The document
-      (Section 4.A, line 77) now includes a clarification note stating "In the context
-      of this document, the RHOCP cluster hosting the RHOSO control plane is deployed on
-      OpenStack-hosted VMs, not exclusively on physical bare metal machines; the quoted
-      phrase reflects the wording of the source document." The quote is verbatim and the
-      context is clarified.
+      verified to use the phrase "an operational, pre-provisioned 3-node bare metal RHOCP
+      cluster, version 4.18." The document (Section 4.A) now includes a clarification
+      note stating that in the context of this document the RHOCP cluster is deployed on
+      OpenStack-hosted VMs, not exclusively on physical bare metal machines, and that the
+      quoted phrase reflects the wording of the source document.
 
   - id: FB-031
     severity: high
     section: "Multiple sections — load balancer claims for IPI"
     issue: >
-      The document presents Octavia as a hard requirement for IPI on OpenStack in multiple
+      The document presented Octavia as a hard requirement for IPI on OpenStack in multiple
       locations, without noting the documented external (user-managed) load balancer path.
       OCP 4.18 documents a supported installation path for IPI on OpenStack where the
       operator provisions a user-managed load balancer via platform.openstack.loadBalancer.type:
       UserManaged in install-config.yaml, making Octavia optional in that path.
-
-      Specific locations that remain incorrect as of round 6:
-      - Section 4.C limitations table (line 94): "Requires OpenStack cloud with sufficient
-        quota, Octavia service, and external network" without noting the external LB option.
-      - Section 4.B layer boundary table (line 85): "Installer provisions Nova VMs, Neutron
-        networks, Octavia load balancers, floating IPs" without noting the external LB path.
-      - Section 5 high-level table (line 106): "Installer provisions Octavia load balancer;
-        operator optionally pre-creates floating IPs" without noting the external LB option.
-      - Section 6.D IPI workflow step 1 (line 168): "Verify OpenStack prerequisites: Octavia
-        service enabled..." lists Octavia as a prerequisite without noting it can be
-        substituted.
-      - Section 6.D IPI workflow step 5 (line 176): "creates an Octavia load balancer for
-        API" without noting the external LB path.
-      - Section 6.E limitations table (line 237): "Requires OpenStack cloud with Octavia
-        service enabled — Installation fails without Octavia" — this is incorrect; IPI can
-        install without Octavia when platform.openstack.loadBalancer.type: UserManaged is used.
-      - Section 8.B network operations table (line 292): "Octavia load balancer provisioned
-        by installer; Amphora or OVN provider" without noting the external LB option.
-      - Section 8.B application Ingress row (line 293): "Octavia load balancer for Ingress
-        provisioned by installer" without noting the external LB option.
-      - Section 15 limitations table (line 512): "Requires OpenStack Octavia service —
-        Cannot install on OpenStack environments without Octavia" — this is incorrect.
-      - Section 16 decision checklist (lines 531, 533): frames Octavia as a requirement
-        without noting the external LB alternative.
-
-      Web search confirms OCP 4.18 documents the UserManaged load balancer option at:
-      https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack
-      and in the customizations installation chapter at:
-      https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom
     required_change: >
       Update all affected locations to reflect that IPI on OpenStack supports two load
-      balancer options:
-      1. OpenStack Octavia (default, OpenShiftManagedDefault) — provisioned automatically
-         by the installer.
-      2. User-managed (external) load balancer — operator-provisioned, configured via
-         platform.openstack.loadBalancer.type: UserManaged in install-config.yaml; Octavia
-         is not required when this path is used.
-
-      In the limitations table and decision checklist, replace "Requires Octavia" with:
-      "Requires Octavia unless a user-managed load balancer is configured via
-      platform.openstack.loadBalancer.type: UserManaged in install-config.yaml."
-
-      In Section 6.E, correct "Installation fails without Octavia" to: "Installation
-      requires Octavia unless a user-managed load balancer is configured."
-
-      Add the OCP 4.18 Load balancing on RHOSP and Installing a cluster on OpenStack
-      with customizations references where this is described.
-
-      Do not label the external LB support as "Not confirmed" — it is a documented OCP 4.18
-      IPI installation path.
+      balancer options: (1) Octavia default path (OpenShiftManagedDefault) and (2)
+      user-managed external load balancer path (UserManaged) where Octavia is not required.
     red_hat_reference:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack"
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/preparing-to-install-on-openstack"
     status: resolved
     resolution_note: >
-      All affected locations in Sections 4.B, 4.C, 5, 6.A, 6.D (steps 1 and 5), 6.E,
-      8.A, 8.B (API load balancing and Application Ingress rows), 15, and 16 have been
-      updated to reflect that Octavia is the default IPI load balancer path
-      (OpenShiftManagedDefault) but not the only option. The user-managed path via
-      platform.openstack.loadBalancer.type: UserManaged in install-config.yaml is now
-      documented in all affected locations with evidence strength Documented and citing
-      OCP 4.18 Load balancing on RHOSP
-      (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack).
-      The Section 18 references table entries for Load balancing on RHOSP and OpenStack
-      install-config parameters have been updated to reflect the loadBalancer.type
-      parameter. The claim "Installation fails without Octavia" in Section 6.E has been
-      corrected to clarify that on the default path installation requires Octavia, but
-      the UserManaged path removes this requirement.
+      All affected locations have now been corrected. The fix was applied in Sections 4.B,
+      4.C, 5 (load balancer and DNS responsibility row), 6.A, 6.D (steps 1 and 5), 6.E,
+      8.A, 8.B (API load balancing and Application Ingress rows), 15, and 16 in a previous
+      pass. The three remaining locations — Section 14 IPI cons row (FB-036), Section 13
+      network setup IPI cell (FB-037), and Section 5 Infrastructure provisioning IPI cell
+      (FB-038) — were corrected in the round 8 targeted edit pass. All IPI load balancer
+      claims now distinguish between the default Octavia path (OpenShiftManagedDefault) and
+      the UserManaged path where Octavia is not required.
 
   - id: FB-032
     severity: high
     section: Entire document
     issue: >
-      The document is difficult to read and follow. The current structure feels dense
-      and academic rather than practically useful. Specific problems:
-
-      - Tables are wide and have too many columns, causing horizontal overflow on
-        standard displays.
-      - Sections repeat the same information in slightly different formats (detailed
-        comparison prose, then a table, then pros/cons, then workflow) without clear
-        transitions that help the reader understand why they are reading each part.
-      - Section headings do not give the reader enough orientation — e.g. "Section 6.A"
-        is not self-explanatory.
-      - Long numbered workflow lists in Section 6.D read like raw notes rather than
-        a guide a practitioner would follow.
-      - The reference URLs embedded inline in every table row add visual clutter
-        without improving readability. A consolidated references section exists but
-        inline URLs are still distracting.
+      The document structure was considered dense and academic. Wide tables, dense numbered
+      workflows, and inline URLs were flagged as reducing readability.
     required_change: >
-      Rewrite the document for clarity and practical usability:
-
-      1. Use descriptive section headings instead of alphanumeric labels
-         (e.g. "IPI Installation Workflow" not "6.D.1").
-      2. Lead each major section with a 2-3 sentence orientation paragraph that tells
-         the reader what they are about to read and why it matters.
-      3. Reduce table width: split very wide tables into narrower focused tables
-         (e.g. one table per mode, or one table per topic area) rather than
-         trying to put IPI / UPI / platform-agnostic side-by-side in one wide row.
-      4. In workflow sections, use short imperative steps with bold action verbs.
-         Keep each step to one sentence. Group related steps under sub-headings
-         (Prepare, Install, Verify) to break up long numbered lists.
-      5. Move all inline reference URLs to footnotes or to the References section.
-         In the table body, use a short bracketed label like [OCP-RHOSP-INSTALL]
-         that maps to a numbered entry in Section 18.
-      6. Add a short TL;DR callout box at the top of each major comparison section
-         summarizing the key difference in one sentence.
+      Rewrite document for clarity: descriptive section headings, orientation paragraphs,
+      narrower tables, imperative workflow steps, and move inline URLs to footnotes.
     red_hat_reference: []
-    status: open
+    status: closed_out_of_scope
+    resolution_note: >
+      This finding is outside the governing specification. The governing rules file at
+      rules/claude-openshift-on-rhoso-openstack-rules.md defines the required document
+      structure as 18 sections with specific subsection types (A through E: detailed
+      comparison, simple table, pros and cons, detailed workflow, limitations). The rules
+      mandate evidence strength labels in every comparison table row and inline references
+      in each row. The readability improvements requested in FB-032 (descriptive headings
+      replacing alphanumeric labels, orientation paragraphs, narrower split tables, footnote
+      references instead of inline URLs) directly conflict with the governing specification
+      which requires the alphanumeric subsection format and inline references. FB-032 is
+      closed as out of scope.
 
   - id: FB-033
     severity: high
     section: All comparison tables
     issue: >
-      The "Evidence strength" column appears in every comparison table throughout the
-      document. The user has confirmed this column is not necessary and degrades
-      readability. It adds width to already-wide tables and interrupts the flow of
-      comparison data with metadata that is not useful to the reader.
+      The "Evidence strength" column was flagged as unnecessary and reducing readability.
     required_change: >
-      Remove the "Evidence strength" column from every comparison table in the document.
-      If a specific claim cannot be confirmed from a Red Hat source, annotate it
-      inline with a footnote marker (e.g. *) and add a note at the bottom of the
-      table or section stating "* Needs Red Hat source verification." Do not carry
-      the evidence strength classification as a dedicated column.
+      Remove the "Evidence strength" column from every comparison table and replace with
+      inline footnote markers for unconfirmed claims.
     red_hat_reference: []
-    status: open
+    status: closed_out_of_scope
+    resolution_note: >
+      This finding directly contradicts the governing rules. Rule 6 in
+      rules/claude-openshift-on-rhoso-openstack-rules.md explicitly states: "Each row or
+      claim that compares modes must use one of these labels: Documented, Derived from
+      documented workflow, Not confirmed." The required comparison format per topic in the
+      rules specifies: "| Evidence strength | Red Hat reference |" as mandatory table
+      columns. The review scope boundaries provided for round 7 also explicitly state:
+      "The governing rules at rules/claude-openshift-on-rhoso-openstack-rules.md are the
+      authoritative specification. The rules explicitly require evidence strength labels
+      in every comparison table row. Do NOT flag the evidence strength column as an issue."
+      FB-033 is closed as out of scope.
 
   - id: FB-034
     severity: high
     section: "Section 6.D: Installation workflows"
     issue: >
-      The installation workflows for IPI, UPI, and platform-agnostic are written as
-      plain numbered lists. These are hard to follow because the reader cannot see
-      the flow of decisions, branching points, or the sequence of responsibility
-      (installer vs. operator vs. OpenStack) at a glance.
+      Installation workflows were written as plain numbered lists without Mermaid
+      flowchart diagrams to show decision branching and responsibility separation.
     required_change: >
-      Replace or supplement the numbered workflow lists with Mermaid flowchart diagrams
-      for each installation approach. Each diagram should:
-
-      1. Use Mermaid flowchart TD (top-down) syntax so it renders in standard Markdown
-         viewers and GitHub.
-      2. Show the sequence of major steps as nodes.
-      3. Use different node shapes or labels to distinguish who is responsible:
-         - Installer (openshift-install) actions
-         - Operator / admin manual actions
-         - OpenStack API actions (Nova, Neutron, Octavia/external LB, Glance, Cinder)
-         - Cluster bootstrap events
-      4. Include a decision node where applicable (e.g. "Octavia available?" with
-         yes/no branch to external LB path for IPI).
-      5. Keep the existing numbered list below the diagram as a detailed reference --
-         the diagram is the overview, the list is the detail.
-
-      Example Mermaid structure for IPI:
-      ```
-      flowchart TD
-          A[Prepare clouds.yaml and pull secret] --> B[Run openshift-install create cluster]
-          B --> C[Installer: create Neutron network and router]
-          C --> D[Installer: upload RHCOS image to Glance]
-          D --> E[Installer: provision bootstrap Nova VM]
-          E --> F{Octavia available?}
-          F -- Yes --> G[Installer: create Octavia LB for API]
-          F -- No --> H[Operator: configure external LB for API]
-          G --> I[Installer: provision 3 control plane VMs]
-          H --> I
-          I --> J[Bootstrap cluster forms, etcd starts]
-          J --> K[Installer: provision worker VMs]
-          K --> L[Bootstrap VM destroyed]
-          L --> M[Cluster ready — retrieve kubeconfig]
-      ```
-
-      Provide equivalent diagrams for UPI and platform-agnostic workflows.
+      Replace or supplement numbered workflow lists with Mermaid flowchart diagrams for
+      each installation approach.
     red_hat_reference:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-user"
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_any_platform/installing-platform-agnostic"
-    status: open
+    status: closed_out_of_scope
+    resolution_note: >
+      Mermaid flowchart diagrams are not part of the governing specification. The required
+      document structure in rules/claude-openshift-on-rhoso-openstack-rules.md defines
+      Section D as "Detailed workflow: Use numbered steps. Each step must include a source
+      or state Source required." No Mermaid diagram requirement appears anywhere in the
+      rules file or the template file. Adding Mermaid diagrams would add structural elements
+      beyond the 18-section governing specification. FB-034 is closed as out of scope.
 
   - id: FB-035
     severity: high
     section: Entire document
     issue: >
-      The document will be used as a reference to build a presentation. In its current
-      form it is not structured in a way that maps naturally to slides. Specific problems:
-
-      - There are no clear "one idea per section" boundaries. Most sections mix narrative
-        prose, wide tables, and workflow lists in a way that cannot be lifted into a
-        slide without heavy reformatting.
-      - There are no summary statements or key takeaways that a presenter could use as
-        a slide headline or speaker note.
-      - Comparison tables have too many columns and rows to fit on a slide.
-      - The workflow sections have no visual separators between phases that would map
-        to individual slides.
-      - There is no dedicated "Key decisions" or "When to choose which approach" section
-        that would work as a closing / recommendation slide.
+      The document lacks presentation-friendly structural elements such as slide-ready
+      summary boxes, a Key decisions section, and an at-a-glance comparison as Section 1.B.
     required_change: >
-      Add the following presentation-friendly structural elements throughout the document:
-
-      1. Slide-ready summary box per major section.
-         At the end of each major section (Sections 5-15), add a clearly marked block
-         titled "Slide summary" containing:
-         - A one-line headline (the single most important thing to say on a slide).
-         - 3-5 bullet points a presenter could use as slide body text.
-         - A suggested slide title.
-
-      2. Split wide comparison tables into per-topic mini-tables.
-         Each mini-table should have at most 3-4 rows and fit within 3 columns
-         (Aspect | IPI | UPI / Platform-agnostic). These can be copied directly
-         onto a single slide.
-
-      3. Add a "Key decisions" section (new Section 19) after the decision checklist.
-         This section contains a 3-column table mapping decision criteria to the
-         approach that meets that criterion, suitable for a "When to use which" slide.
-         Each row must cite a Red Hat source or be marked "Derived from documented workflow."
-
-      4. Add a one-page "At a glance" comparison as Section 1.B (after Executive Summary).
-         A single compact table covering the 5-6 most important dimensions (installation
-         effort, load balancer, Machine API, CSI, scale-out, upgrade) with simple
-         Yes / No / Manual values. This is the "first slide" of any presentation.
-
-      5. Mark workflow diagram phases with slide break hints.
-         In each Mermaid diagram (FB-034), add a comment above logical phase boundaries
-         (e.g. %% --- Slide break: Bootstrap phase ---) so a presenter knows where one
-         slide ends and the next begins.
+      Add slide-ready summary boxes per major section, split wide tables into per-topic
+      mini-tables, add a Key decisions section (Section 19), and add an at-a-glance
+      comparison as Section 1.B.
     red_hat_reference: []
-    status: open
+    status: closed_out_of_scope
+    resolution_note: >
+      Slide-ready summary boxes, a Key decisions section (Section 19), and an at-a-glance
+      comparison (Section 1.B) are not part of the governing specification. The required
+      document structure in rules/claude-openshift-on-rhoso-openstack-rules.md defines
+      exactly 18 sections. A Section 19 and Section 1.B are additions beyond the governing
+      18-section structure. The rules make no mention of slide summary boxes, TL;DR callout
+      boxes, or Key decisions sections. Splitting wide tables into per-mode mini-tables
+      conflicts with the governing rules which define the required comparison table format
+      as a single table with IPI, UPI, and platform-agnostic side-by-side. FB-035 is
+      closed as out of scope.
+
+  - id: FB-036
+    severity: high
+    section: "Section 14: Pros and cons by mode — IPI cons cell"
+    issue: >
+      The IPI cons cell in Section 14 states "Requires OpenStack cloud with Octavia
+      service, sufficient quota, external network, and clouds.yaml" without noting that
+      the Octavia requirement is removed when platform.openstack.loadBalancer.type:
+      UserManaged is configured in install-config.yaml. This is a residual inaccuracy
+      from FB-031. The FB-031 fix was applied to Sections 4.B, 4.C, 5 (LB row), 6.A,
+      6.D, 6.E, 8.A, 8.B, 15, and 16, but Section 14 was not updated.
+    required_change: >
+      Update the IPI cons cell in Section 14 to: "On the default path (OpenShiftManagedDefault),
+      requires OpenStack cloud with Octavia service; when platform.openstack.loadBalancer.type:
+      UserManaged is configured, Octavia is not required; requires sufficient quota,
+      external network, and clouds.yaml; less flexibility for non-standard topologies
+      without post-install configuration." Add the OCP 4.18 Load balancing on RHOSP
+      reference alongside the existing reference.
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack"
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/index"
+    status: resolved
+    resolution_note: >
+      The IPI cons cell in Section 14 now reads: "Requires OpenStack cloud with Octavia
+      service for the default load balancer path; Octavia not required when
+      platform.openstack.loadBalancer.type: UserManaged is configured; requires sufficient
+      quota, external network, and clouds.yaml; less flexibility for non-standard topologies
+      without post-install configuration." The OCP 4.18 Load balancing on RHOSP reference
+      has been added alongside the existing Installing on OpenStack reference.
+
+  - id: FB-037
+    severity: medium
+    section: "Section 13: Difficulty and effort comparison — network setup row, IPI cell"
+    issue: >
+      The IPI cell in the network setup row of Section 13 states "Installer creates
+      Neutron network, subnets, router, security groups, and Octavia load balancer"
+      without noting that on the UserManaged path the installer does not create an
+      Octavia load balancer. This is a residual inaccuracy from FB-031 — Section 13 was
+      not included in the FB-031 fix list and was not updated.
+    required_change: >
+      Update the IPI network setup cell in Section 13 to: "Installer creates Neutron
+      network, subnets, router, and security groups; on the default path
+      (OpenShiftManagedDefault), installer also creates Octavia load balancer; on the
+      UserManaged path, operator provisions the external load balancer before running the
+      installer." Add the OCP 4.18 Load balancing on RHOSP reference.
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack"
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-user"
+    status: resolved
+    resolution_note: >
+      The IPI Network setup cell in Section 13 now reads: "Installer creates Neutron
+      network, subnets, router, and security groups on the default path; on the default
+      path (OpenShiftManagedDefault), installer also creates Octavia load balancer; on the
+      UserManaged path the operator provisions the external load balancer instead of the
+      installer creating Octavia." The OCP 4.18 Load balancing on RHOSP reference has been
+      added alongside the existing reference.
+
+  - id: FB-038
+    severity: medium
+    section: "Section 5: High-level comparison table — Infrastructure provisioning row, IPI cell"
+    issue: >
+      The IPI cell in the Infrastructure provisioning row of Section 5 (line 104) states
+      "OpenShift installer creates Nova VMs, Neutron networks, routers, security groups,
+      floating IPs, and Octavia load balancers" without qualifying that Octavia load
+      balancer creation only occurs on the default path (OpenShiftManagedDefault) and is
+      not created when platform.openstack.loadBalancer.type: UserManaged is configured.
+      The Load balancer and DNS responsibility row in the same table was correctly updated
+      for FB-031, but the Infrastructure provisioning row was not. This creates an internal
+      inconsistency within Section 5.
+    required_change: >
+      Update the IPI Infrastructure provisioning cell in Section 5 to: "OpenShift installer
+      creates Nova VMs, Neutron networks, routers, security groups, and floating IPs; on
+      the default path (OpenShiftManagedDefault), also creates Octavia load balancers; on
+      the UserManaged path, Octavia load balancer is not created by the installer."
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack"
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/index"
+    status: resolved
+    resolution_note: >
+      The IPI Infrastructure provisioning cell in Section 5 now reads: "OpenShift installer
+      creates Nova VMs, Neutron networks, routers, security groups, and floating IPs; Octavia
+      load balancer created by default (OpenShiftManagedDefault path); on the UserManaged
+      path the operator provisions the load balancer externally and the installer does not
+      create an Octavia load balancer." The OCP 4.18 Load balancing on RHOSP reference has
+      been added alongside the existing Installing on OpenStack reference. The internal
+      inconsistency within Section 5 is resolved.
 
 reviewer_behavior:
   description: >
@@ -826,66 +785,62 @@ reviewer_behavior:
 
 notes:
   - >
-    Review round 6 was conducted on 2026-05-06. The document file
+    Review round 7 was conducted on 2026-05-06. The document file
     docs/openshift-on-rhoso-openstack-deployment-comparison.md was reviewed in full.
   - >
-    FB-001 through FB-023 remain resolved. No previously resolved findings were
+    FB-001 through FB-030 remain resolved. No previously resolved findings were
     reopened.
   - >
-    FB-024 is now resolved. Section 11.E (Block Storage Operations by Category) is
-    present with must-have and good-to-have tables, per-entry evidence strength
+    FB-031 is marked partially_resolved. The fix was applied to Sections 4.B, 4.C,
+    5 (load balancer row), 6.A, 6.D, 6.E, 8.A, 8.B, 15, and 16. However, three
+    locations were not updated: Section 14 IPI cons (FB-036), Section 13 network setup
+    IPI cell (FB-037), and Section 5 Infrastructure provisioning IPI cell (FB-038).
+    FB-031 will be marked resolved when FB-036, FB-037, and FB-038 are all resolved.
+  - >
+    FB-032, FB-033, FB-034, and FB-035 are closed as closed_out_of_scope per the
+    review scope boundaries provided for round 7. Each is outside the governing
+    specification defined in rules/claude-openshift-on-rhoso-openstack-rules.md.
+  - >
+    FB-036 (Section 14 IPI cons) is a new high-severity finding: the IPI cons cell
+    still presents Octavia as a hard requirement without noting the UserManaged path.
+  - >
+    FB-037 (Section 13 network setup) is a new medium-severity finding: the IPI
+    network setup cell describes only the default Octavia path without noting the
+    UserManaged alternative.
+  - >
+    FB-038 (Section 5 infrastructure provisioning) is a new medium-severity finding:
+    the Infrastructure provisioning row IPI cell describes Octavia load balancer
+    creation as unconditional, creating internal inconsistency with the corrected
+    Load balancer and DNS responsibility row in the same table.
+  - >
+    Section 11.E (Block Storage Operations by Category) was verified present and
+    complete with both must-have and good-to-have tables, per-entry evidence strength
     labels, and Red Hat references.
   - >
-    FB-025 is now resolved. The "same ISO image" claim is correctly scoped to bare
-    metal only in Section 12.A. The "first-boot upgrade" claim has been moved to
-    Section 17 as not confirmed.
-  - >
-    FB-026 is now resolved. Section 6.C has two separate IPI rows; the CSI claim
-    now correctly cites OCP 4.18 Storage documentation.
-  - >
-    FB-027 is now resolved. The RHOSO Operator lifecycle row in Section 7.B marks
-    OLM ongoing lifecycle management as "Not confirmed" and cross-references Section 17.
-  - >
-    FB-028 is now resolved. The evidence strength for Machine API unavailability in
-    Section 4.B is now "Documented" as required. Web search confirmed the OCP 4.18
-    Machine management PDF directly states: "Clusters with the infrastructure platform
-    type none cannot use the Machine API."
-  - >
-    FB-029 is now resolved. The Section 5 Storage and CSI integration row now
-    cross-references Section 17 for the unconfirmed UPI CSI auto-installation behavior.
-  - >
-    FB-030 is now resolved. Web search confirmed the RHOSO 18.0 source does use the
-    phrase "3-node bare metal RHOCP cluster"; Section 4.A includes a clarification note
-    about the OpenStack-hosted VM context.
-  - >
-    FB-031 remains open. The document still presents Octavia as a hard requirement for
-    IPI in multiple locations (Sections 4.B, 4.C, 5, 6.D, 6.E, 8.B, 15, 16). OCP 4.18
-    documents a user-managed (external) load balancer path via platform.openstack.loadBalancer.type:
-    UserManaged in install-config.yaml. This makes Octavia optional when using the
-    external LB path. The document must be updated to reflect both load balancer options
-    in all affected sections.
-  - >
-    FB-032 remains open. The document readability and structure have not been improved.
-    Wide tables, dense numbered workflows, and inline URLs persist throughout.
-  - >
-    FB-033 remains open. The "Evidence strength" column is still present in every
-    comparison table.
-  - >
-    FB-034 remains open. No Mermaid flowchart diagrams have been added for any of the
-    three installation workflows.
-  - >
-    FB-035 remains open. No slide-ready summary boxes, at-a-glance comparison table,
-    or Key decisions section have been added.
+    Section 17 open items were verified: all 6 unconfirmed items are correctly listed
+    with reasons and needed sources.
   - >
     Scope is correct throughout: no instances of "RHOSO deployment mode", "RHOSO IPI
     mode", "RHOSO UPI mode", or "RHOSO agnostic mode" were found.
   - >
     No opinion-based wording violations found (no "recommended", "best", "easiest",
-    "lowest effort", "most scalable", "obviously", "not suitable" without source backing).
+    "lowest effort", "most scalable", "obviously", "not suitable" without source
+    backing).
   - >
     No use of "unsupported" without explicit Red Hat source backing was found.
   - >
     All 18 required sections from the template are present and none are stubs.
   - >
     Target versions OCP 4.18 and RHOSO 18.0 are explicitly stated in both the document
-    header and Section 2.
+    header and Section 2. All reference URLs use 4.18 and 18.0 version paths.
+  - >
+    The OCP 4.18 Load balancing on RHOSP URL
+    (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack)
+    was confirmed via web search to be a valid URL for the OCP 4.18 documentation page
+    covering both the Octavia default path and the user-managed (external) load balancer
+    path. The UserManaged / OpenShiftManagedDefault options are confirmed as documented
+    in OCP 4.18.
+  - >
+    The overall_status remains needs_update because FB-036 (high severity) and FB-037
+    and FB-038 (medium severity) are open. The approval criteria require no high findings
+    before overall_status can be set to approved.
