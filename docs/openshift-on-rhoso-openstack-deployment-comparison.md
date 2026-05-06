@@ -32,7 +32,7 @@ RHOSO 18.0 is not installed directly on bare metal or directly on OpenStack. It 
 ```mermaid
 flowchart TD
     subgraph APPROACH["Installation approach — choose one"]
-        IPI["IPI\nInstaller provisions Nova VMs,\nNeutron networks, Octavia LB"]
+        IPI["IPI\nInstaller provisions Nova VMs, Neutron,\nfloating IPs; Octavia LB (default)\nor operator external LB (UserManaged)"]
         UPI["UPI\nOperator provisions all OpenStack\nresources via Ansible playbooks"]
         PA["Platform-agnostic\nOperator provisions all infrastructure\nusing any tooling"]
     end
@@ -104,7 +104,7 @@ Source: [OCP 4.18 — Installing a cluster on any platform](https://docs.redhat.
 | Create security groups | Installer | Operator (Ansible playbooks available) | Operator |
 | Upload RHCOS image to Glance | Not confirmed in the referenced Red Hat documentation whether the installer uploads RHCOS automatically or uses a pre-uploaded image | Operator | N/A (no Glance integration) |
 | Provision load balancer (API + Ingress) | Installer creates Octavia LB (default path) or Operator provisions external LB (UserManaged path) | Operator | Operator |
-| Configure DNS records | Installer | Operator | Operator |
+| Configure DNS records | Operator (must add A records for `api.<cluster>.<domain>` → API floating IP and `*.apps.<cluster>.<domain>` → Ingress floating IP to DNS server) | Operator | Operator |
 | Generate Ignition configs | Installer (internal) | Installer (`openshift-install create ignition-configs`) | Installer (`openshift-install create ignition-configs`) |
 | Approve worker CSRs | Automated (Machine API) | Operator (`oc adm certificate approve`) | Operator (`oc adm certificate approve`) |
 
@@ -128,7 +128,8 @@ flowchart TD
     I --> J["Bootstrap completes;\nInstaller destroys bootstrap VM"]
     J --> K["Installer creates\nworker Nova VMs"]
     K --> L["Machine API manages workers;\nCSRs approved automatically"]
-    L --> M["Cluster ready"]
+    L --> DNS["Operator adds DNS A records\nfor API FIP and Ingress FIP\nto DNS server"]
+    DNS --> M["Cluster accessible"]
 ```
 
 Sources: [OCP 4.18 — Installing on OpenStack with customizations](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom); [OCP 4.18 — Load balancing on RHOSP](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack).
@@ -185,7 +186,7 @@ Source: [OCP 4.18 — Installing a cluster on any platform](https://docs.redhat.
 | External network in OpenStack | Required | Required | Not applicable |
 | clouds.yaml | Required | Required | Not applicable |
 | Ansible collections + Python modules | Not required | Required | Not applicable |
-| DNS records (pre-install) | Installer creates | Operator must create before booting nodes | Operator must create before booting nodes |
+| DNS records (pre-install) | Operator must add DNS A records for `api.<cluster>.<domain>` (→ API floating IP) and `*.apps.<cluster>.<domain>` (→ Ingress floating IP) to DNS server after installer outputs floating IPs | Operator must create before booting nodes | Operator must create before booting nodes |
 | HTTP/HTTPS Ignition server | Not required | Not required | Required |
 | Load balancer (pre-install) | Not required (default path); required before running installer (UserManaged path) | Required before running Ansible playbooks | Required before booting bootstrap node |
 
@@ -273,7 +274,9 @@ This isolated network configuration is applied post-install using the NMState Op
 
 ### DNS and endpoint requirements
 
-The following DNS records are required by all installation modes. On IPI, the installer creates these records. On UPI and platform-agnostic, the operator must create them before booting bootstrap and control plane nodes.
+The following DNS records are required by all installation modes. For IPI on OpenStack, the operator must add DNS A records pointing `api.<cluster>.<domain>` at the API floating IP and `*.apps.<cluster>.<domain>` at the Ingress floating IP to their DNS server after the installer outputs those floating IPs; the installer does not create DNS records automatically. For UPI and platform-agnostic installations, the operator must create these records before booting bootstrap and control plane nodes.
+
+Source: [OCP 4.18 — Installing a cluster on OpenStack with customizations](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom).
 
 | Endpoint | Record type | Purpose |
 |---|---|---|
@@ -287,13 +290,15 @@ Sources: [OCP 4.18 — Installing on OpenStack on your own infrastructure](https
 
 ### Node IP assignment comparison
 
-| Mode | Primary NIC IP assignment | RHOSO isolated NIC configuration |
-|---|---|---|
-| IPI | Neutron DHCP; the subnet specified by `platform.openstack.machinesSubnet` must have DHCP enabled | NMState Operator with NodeNetworkConfigurationPolicy; static IPv4 on VLAN interfaces (documented for all modes) |
-| UPI | Operator creates Neutron ports; fixed IP assignment via Neutron port configuration; whether the documented Ansible playbooks use `--fixed-ip` is not confirmed in the referenced Red Hat documentation | NMState Operator with NodeNetworkConfigurationPolicy; static IPv4 on VLAN interfaces |
-| Platform-agnostic | No Neutron port management; static IP configurable via NodeNetworkConfigurationPolicy (NMState Operator) or MachineConfig (NetworkManager keyfile) post-install; Ignition-level static IP configuration on OpenStack-hosted VMs is not confirmed in the referenced Red Hat documentation | NMState Operator with NodeNetworkConfigurationPolicy; static IPv4 on VLAN interfaces |
+| Mode | Primary NIC IP assignment |
+|---|---|
+| IPI | Neutron DHCP; the subnet specified by `platform.openstack.machinesSubnet` must have DHCP enabled |
+| UPI | Operator creates Neutron ports; fixed IP assignment via Neutron port configuration; whether the documented Ansible playbooks use `--fixed-ip` is not confirmed in the referenced Red Hat documentation |
+| Platform-agnostic | No Neutron port management; static IP configurable via NodeNetworkConfigurationPolicy (NMState Operator) or MachineConfig (NetworkManager keyfile) post-install; Ignition-level static IP configuration on OpenStack-hosted VMs is not confirmed in the referenced Red Hat documentation |
 
-Sources: [OCP 4.18 — Installation configuration parameters for OpenStack](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installation-config-parameters-openstack); [RHOSO 18.0 — Preparing networks](https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhoso-networks_preparing); [OCP 4.18 — Kubernetes NMState](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/kubernetes_nmstate/index).
+For all three installation modes, RHOSO isolated network interfaces on RHOCP worker nodes are configured post-install using the NMState Operator with NodeNetworkConfigurationPolicy objects that define VLAN sub-interfaces with static IPv4 addresses. Source: [RHOSO 18.0 — Preparing networks](https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhoso-networks_preparing).
+
+Sources: [OCP 4.18 — Installation configuration parameters for OpenStack](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installation-config-parameters-openstack); [OCP 4.18 — Kubernetes NMState](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/kubernetes_nmstate/index).
 
 ---
 
@@ -518,7 +523,7 @@ Sources: [OCP 4.18 — Installing on OpenStack with customizations](https://docs
 | Risk area | IPI | UPI | Platform-agnostic |
 |---|---|---|---|
 | Node failure during upgrade | Machine API can provision replacement automatically | Operator must provision replacement manually; risk of extended cluster degradation | Operator must provision replacement manually; risk of extended cluster degradation |
-| Failed node impacting RHOSO | Machine API reduces time-to-replacement; RHOSO service rescheduling window is shorter | Longer manual recovery adds operational window where RHOSO services run with reduced compute capacity | Longest manual recovery path; highest operational risk for RHOSO service continuity |
+| Failed node reducing pod scheduling capacity | Machine API provisions replacement Nova VM automatically; reduced manual intervention required ([OCP 4.18 Machine management](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_management/index)) | Operator must provision replacement Nova VM manually; approve CSRs; reduced scheduling capacity until replacement is ready | Operator must provision replacement VM manually using any tooling; approve CSRs; reduced scheduling capacity until replacement is ready |
 | Pre-install error recovery | Installer handles rollback of created OpenStack resources | Operator must manually clean up partial Neutron and Nova resources | Operator must manually clean up all partial infrastructure |
 | Quota exhaustion during scaling | Machine API scaling may fail if quota is reached; requires quota monitoring | Operator sees Nova API error directly when creating VM | Operator sees infrastructure error directly when creating VM |
 | Load balancer dependency | Default path depends on Octavia availability and health; UserManaged path moves LB responsibility to operator | Operator controls LB configuration and availability | Operator controls LB configuration and availability |

@@ -1,452 +1,312 @@
-review_round: 1
+review_round: 2
 
-overall_status: resolved
+overall_status: round_2_fixes_applied
 
 approval_criteria:
   no_critical_findings: true
   no_high_findings: true
   all_major_claims_have_red_hat_references: true
   all_required_sections_complete: true
-  no_assumptions: true
+  no_assumptions: false
 
 notes: >
-  All findings from review round 1 (FB-001 through FB-014) have been resolved.
-  FB-005 is closed as not a finding per the governing rules. All other findings
-  were addressed by targeted edits to the document. No sections were restructured
-  beyond the changes required to resolve the findings.
+  Round 2 fixes applied 2026-05-06. All round 2 findings resolved or closed in this pass:
+  FB-015, FB-018, FB-022 (three DNS error locations corrected), FB-017 (RHOSO isolated NIC
+  column removed from node IP table, replaced with post-table prose), FB-019 (unsourced
+  "Failed node impacting RHOSO" row replaced with neutral sourced row), FB-021 (DNS step
+  added to IPI workflow Mermaid diagram), FB-023 (Architecture diagram IPI label updated
+  to show both LB paths). FB-016 and FB-020 closed as not_a_finding: the governing rules
+  and CLAUDE.md explicitly require operational impact coverage and do not prohibit
+  RHOSO-specific content in a document scoped to OpenShift deployment for RHOSO use.
+
+round_1_fix_verification:
+  FB-001_014: "CONFIRMED — RHOSO Operator URL uses assembly_installing-and-preparing-the-operators"
+  FB-002: "CONFIRMED — Section 9 correctly states RHOSO 18.0.6+ requires OCP 4.18; earlier 18.0.x requires OCP 4.16"
+  FB-003: "CONFIRMED — RHCOS Glance upload marked as 'not confirmed' in prose and Mermaid diagram"
+  FB-004: "CONFIRMED — UPI MachineSet language reads 'UPI installations do not have machine sets'"
+  FB-006: "CONFIRMED — DNS table cites all three mode sources"
+  FB-007: "CONFIRMED — CSI auto-install uses consistent 'any OpenStack cluster' language with Section 10 pointer"
+  FB-008: "CONFIRMED — Upgrade Mermaid failure branch routes to new node joining, then back to pool check"
+  FB-009: "CONFIRMED — Section 5.5 present covering MCO, MachineConfig, KubeletConfig, ContainerRuntimeConfig"
+  FB-010: "CONFIRMED — UPI Mermaid has LB/DNS step (C) before Ansible playbooks step (D)"
+  FB-011: "CONFIRMED — Good-to-have storage entries marked 'Not confirmed in the referenced Red Hat documentation'"
+  FB-012: "CONFIRMED — LB diagram labels IPI-only path and UPI/platform-agnostic path separately"
+  FB-013: "CONFIRMED — IPI prose states 'Machine API is fully available after IPI installation'"
 
 feedback:
 
-  - id: FB-001
+  - id: FB-015
     severity: high
-    section: "Section 2: Architecture Context — RHOSO deployment sequence"
+    section: "Section 3: Installation Comparison — Prerequisites comparison table, DNS records row"
     issue: >
-      The document states that RHOSO deployment begins only after the RHOCP cluster is
-      operational, and that the RHOSO OpenStack Operator is installed via OLM by
-      creating an OperatorGroup and Subscription in the 'openstack-operators' namespace.
-      This claim is cited to the RHOSO 18.0 Installing and preparing the OpenStack
-      Operator page. However, the cited URL uses the path
-      assembly_installing-and-preparing-the-openstack-operator, while the current RHOSO
-      18.0 documentation uses assembly_installing-and-preparing-the-operators. The
-      chapter title has changed in the published documentation. The URL in the document
-      may resolve to a 404 or redirect, making the source unverifiable by the reader.
+      The prerequisites comparison table states that DNS records are created by the
+      "Installer" for IPI on OpenStack. Multiple Red Hat documentation sources confirm
+      this is incorrect: for IPI on OpenStack, the operator must manually add DNS records
+      for api.<cluster>.<domain> and *.apps.<cluster>.<domain> to their DNS server before
+      or after installation (not automatically by the installer). The OCP 4.18 IPI on
+      OpenStack documentation explicitly states "you must add records that follow these
+      patterns to your DNS server for the API and Ingress FIPs." This is also consistent
+      with the behavior documented in OCP 4.10 and 4.16 on OpenStack IPI. Presenting the
+      IPI DNS setup as automatic when it requires manual operator action is a factual error
+      that could cause installation failures if followed.
     required_change: >
-      Verify the exact URL resolves correctly in the published RHOSO 18.0 documentation.
-      If the URL is broken, replace it with the correct chapter URL:
-      https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-operators
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-operators"
-    status: resolved
-    resolution: >
-      Updated the Section 2 source citation URL from
-      assembly_installing-and-preparing-the-openstack-operator to
-      assembly_installing-and-preparing-the-operators. Updated the inline link text
-      from "Installing and preparing the OpenStack Operator" to "Installing and
-      preparing the Operators" in both the Section 2 source line and the Section 11
-      references table.
-
-  - id: FB-002
-    severity: high
-    section: "Section 2: Architecture Context — RHOCP version requirement for RHOSO 18.0"
-    issue: >
-      The document states in Section 9 (Decision Checklist) that RHOSO 18.0 requires
-      RHOCP 4.18 and that all three installation approaches produce a 4.18 cluster.
-      However, based on RHOSO 18.0 infrastructure and system requirements documentation,
-      RHOSO 18.0 versions earlier than 18.0.6 require RHOCP 4.16, and only RHOSO 18.0.6
-      and later require RHOCP 4.18. The document does not acknowledge the sub-version
-      dependency (18.0.6+) and presents the RHOCP 4.18 requirement as unconditional for
-      all RHOSO 18.0 releases. This is an imprecise claim that could mislead readers
-      running earlier RHOSO 18.0.x releases.
-    required_change: >
-      Qualify the RHOCP version claim: state that RHOSO 18.0.6 and later require RHOCP
-      4.18, while earlier RHOSO 18.0.x releases may require RHOCP 4.16. Add the RHOSO
-      18.0 infrastructure and system requirements URL as the source.
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/planning_your_deployment/assembly_infrastructure-and-system-requirements"
-    status: resolved
-    resolution: >
-      Updated the Section 9 Decision Checklist row for RHOCP version requirement to
-      state: "RHOSO 18.0.6 and later require RHOCP 4.18. Earlier RHOSO 18.0.x releases
-      require RHOCP 4.16. All three installation approaches produce the required RHOCP
-      version when using the matching OpenShift installer." Added source citation inline.
-
-  - id: FB-003
-    severity: high
-    section: "Section 3: Installation Comparison — IPI Glance image upload"
-    issue: >
-      The IPI installation workflow Mermaid diagram includes a step 'Installer uploads
-      RHCOS image to Glance' as a discrete step between network provisioning and LB
-      provisioning. The responsibility matrix also states 'Upload RHCOS image to Glance'
-      is done by the 'Installer' for IPI. However, the Red Hat documentation for earlier
-      OCP versions (4.16 and earlier on OpenStack) explicitly stated that the operator
-      must retrieve and upload the RHCOS image before running the installer, and the
-      installer uses a clusterOSImage parameter to point to an existing image. It is not
-      confirmed in the cited OCP 4.18 reference (installing-openstack-installer-custom)
-      that the IPI installer automatically uploads a fresh RHCOS image to Glance without
-      any pre-uploaded image. The earlier (pre-4.12) behaviour was that the RHOCP
-      installer automatically downloaded and uploaded a RHCOS image, but this behaviour
-      changed in later versions of the documentation. This claim is potentially inaccurate
-      and the document provides no specific source sentence confirming auto-upload in 4.18.
-    required_change: >
-      Verify from the OCP 4.18 Installing on OpenStack with customizations documentation
-      whether the installer automatically downloads and uploads the RHCOS image to Glance,
-      or whether the operator must pre-upload it. If auto-upload is not confirmed, change
-      the Mermaid diagram step and responsibility matrix entry to read:
-      'Installer uses pre-uploaded or auto-downloaded RHCOS image in Glance'
-      and mark the auto-upload behaviour as 'Not confirmed in the referenced Red Hat
-      documentation'. If auto-upload is confirmed, add a direct source sentence citation.
+      Change the "DNS records (pre-install)" row for IPI from "Installer creates" to
+      "Operator must add DNS records for API and Ingress FIPs to DNS server; installer
+      does not create DNS records automatically." This must be consistent with the
+      IPI description in Section 3 prose and the DNS section in Section 4. The Section 4
+      DNS table already correctly states "On IPI, the installer creates these records"
+      which would then also need to be corrected to match. Cite the OCP 4.18 Installing
+      on OpenStack with customizations documentation.
     red_hat_reference:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
     status: resolved
     resolution: >
-      Updated the responsibility matrix IPI entry for "Upload RHCOS image to Glance" to
-      read: "Not confirmed in the referenced Red Hat documentation whether the installer
-      uploads RHCOS automatically or uses a pre-uploaded image". Updated the IPI Mermaid
-      diagram node label from "Installer uploads RHCOS image to Glance" to "RHCOS image
-      available in Glance (auto-upload not confirmed)".
+      Prerequisites table DNS row for IPI updated from "Installer creates" to "Operator
+      must add DNS A records for api.<cluster>.<domain> (→ API floating IP) and
+      *.apps.<cluster>.<domain> (→ Ingress floating IP) to DNS server after installer
+      outputs floating IPs." Citation to OCP 4.18 Installing on OpenStack with
+      customizations already present on the row's source line.
 
-  - id: FB-004
+  - id: FB-016
     severity: high
-    section: "Section 5: Machine API and Node Lifecycle — UPI MachineSet availability"
+    section: "Section 6: Upgrades and Lifecycle — Upgrade comparison table, RHOSO impact row"
     issue: >
-      The document states that for UPI on OpenStack, Machine API availability and
-      MachineSet-based scaling is 'Not confirmed for automated MachineSet-based scaling
-      on UPI OpenStack clusters'. While the wording is carefully hedged, the underlying
-      question has a clearer answer in the OCP 4.18 Machine management documentation.
-      The 'Managing user-provisioned infrastructure manually' chapter states that
-      'customized, user-provisioned infrastructure installations do not have machine sets'.
-      This is stronger than 'not confirmed' — UPI clusters do not have MachineSets created
-      by the installer, and Machine API availability requires additional validation and
-      configuration. The document's hedged language understates what the source actually
-      says and could lead readers to believe MachineSet scaling might be possible with
-      additional setup, when in fact the source states UPI installations do not have
-      machine sets at all.
+      The upgrade comparison table in Section 6 contains a row titled "RHOSO impact
+      during upgrade" with RHOSO-specific content in every cell. The governing rules
+      (claude-openshift-on-rhoso-openstack-rules.md, Scope section) explicitly state:
+      "Out of scope: RHOSO-specific content. Do not use RHOSO as a comparison dimension.
+      Do not include 'RHOSO impact', 'RHOSO dependency boundary', 'RHOSO control plane',
+      'RHOSO data plane', or 'RHOSO Operator lifecycle' as comparison topics." The row
+      directly violates this rule by making "RHOSO impact during upgrade" a labeled
+      comparison dimension across IPI, UPI, and platform-agnostic columns. This is not
+      general OpenShift upgrade behavior — it is RHOSO-specific framing inserted into a
+      table that should compare OpenShift upgrade behavior only.
     required_change: >
-      Update the UPI MachineSet descriptions in Section 1 (At a Glance), Section 5
-      (Machine API comparison table), and Section 3 (Installation limitations) to reflect
-      the OCP 4.18 Machine management documentation statement that user-provisioned
-      infrastructure installations do not have machine sets. The current hedged phrasing
-      should be replaced with the documented fact, while preserving the note that advanced
-      machine management requires additional validation and configuration to use the
-      Machine API. The Section 10 open item for this should be updated accordingly.
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_management/managing-user-provisioned-infrastructure-manually"
-    status: resolved
-    resolution: >
-      Updated all locations where the document used "not confirmed for automated MachineSet
-      scaling" for UPI to instead state "UPI installations do not have machine sets" with
-      citation to OCP 4.18 Machine management documentation. Locations updated: Section 1
-      At a Glance table, Section 3 installation limitations table, Section 3 pros and cons
-      table, Section 5 availability prose, Section 5 Machine API comparison table
-      (MachineSet scaling and MachineHealthCheck rows).
-
-  - id: FB-005
-    severity: medium
-    section: "Section 3: Installation Comparison — scope boundary for RHOSO networking"
-    issue: >
-      Section 4 (Networking) includes a subsection titled 'RHOSO isolated network
-      topology' that describes VLAN-backed isolated networks for RHOSO service traffic,
-      the NMState Operator, NodeNetworkConfigurationPolicy, and NetworkAttachmentDefinitions
-      for Multus. The governing rules explicitly state that RHOSO-specific content must not
-      be used as a comparison dimension, and that the document must be useful to anyone
-      deploying OpenShift on any OpenStack environment. The RHOSO isolated network
-      topology subsection and the Mermaid diagram showing ctlplane, storage, internalapi,
-      and tenant VLAN networks describe RHOSO deployment configuration, not OpenShift
-      installation on OpenStack. While the document acknowledges these steps are
-      post-install and installation-approach-independent, their inclusion in the networking
-      section adds RHOSO-specific content that the rules exclude from the comparison
-      dimensions. The scope boundary stated in the rules is 'do not include RHOSO impact
-      or RHOSO dependency boundary as comparison topics'.
-    required_change: >
-      Either remove the RHOSO isolated network topology subsection and its Mermaid diagram,
-      or clearly separate it into a clearly marked appendix-style note that explains the
-      RHOSO network context without presenting it as a comparison dimension between IPI,
-      UPI, and platform-agnostic. The section heading and Mermaid diagram labels should
-      not give it equal weight to the three OpenShift installation-mode networking topics.
-      If retained, add an explicit statement that this subsection is out-of-scope for the
-      installation comparison and is included only for architectural context.
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_preparing-rhoso-networks_preparing"
-    status: closed_not_a_finding
-    resolution: >
-      RHOSO service networking coverage is explicitly required by the governing rules
-      (Section 9: Node IP and networking — "Include any RHOSO networks only when directly
-      documented"). The isolated network topology is directly documented in RHOSO 18.0
-      Planning your networks. The subsection is correctly included as architectural context
-      for the deployment comparison. The existing text already states this configuration
-      is post-install and applies identically to all three installation modes, so it is
-      not presented as a comparison dimension.
-
-  - id: FB-006
-    severity: medium
-    section: "Section 4: Networking — DNS table source attribution"
-    issue: >
-      The DNS and endpoint requirements table (api.<cluster>, api-int.<cluster>,
-      *.apps.<cluster>) is sourced only from the OCP 4.18 Installing on OpenStack on
-      your own infrastructure page. This URL covers UPI on OpenStack. The same DNS
-      records are required for IPI and platform-agnostic installations, and those DNS
-      requirements appear in separate sections of the OpenStack and platform-agnostic
-      installation documentation. Citing only the UPI source for a table presented as
-      applicable to all three modes is incomplete attribution and could be misread as
-      implying that IPI does not require the same DNS records.
-    required_change: >
-      Add additional source citations for the DNS table to cover IPI and platform-agnostic
-      DNS requirements. Appropriate additional sources include:
-      OCP 4.18 Installing on OpenStack with customizations
-      (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom)
-      and OCP 4.18 Installing on any platform
-      (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_any_platform/installing-platform-agnostic).
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
-      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_any_platform/installing-platform-agnostic"
-    status: resolved
-    resolution: >
-      Updated the DNS and endpoint requirements table source line to cite all three mode
-      sources: UPI (installing-openstack-user), IPI (installing-openstack-installer-custom),
-      and platform-agnostic (installing-platform-agnostic), each labeled with the mode
-      they cover.
-
-  - id: FB-007
-    severity: medium
-    section: "Section 7: Storage and CSI — CSI auto-installation scope"
-    issue: >
-      The document states that OpenShift Container Platform installs the OpenStack Cinder
-      CSI Driver Operator and the OpenStack Cinder CSI driver on 'OpenStack clusters' and
-      the Manila CSI driver 'by default on any OpenStack cluster'. The cited source (OCP
-      4.18 Storage: Using Container Storage Interface) is confirmed to contain this
-      language. However, the document also says 'Whether auto-installation of Cinder and
-      Manila CSI drivers applies to UPI clusters with OpenStack credentials (as distinct
-      from IPI clusters) is not confirmed', which directly contradicts the earlier
-      statement that the drivers install on 'any OpenStack cluster'. If the OCP 4.18
-      storage documentation says 'any OpenStack cluster', then UPI on OpenStack (which
-      has platform type openstack) should be covered. The document creates an internal
-      contradiction: it first presents the 'any OpenStack cluster' language as fact from
-      the Red Hat source, then immediately qualifies it as not confirmed for UPI. This
-      ambiguity is not resolved.
-    required_change: >
-      Resolve the internal contradiction. Either:
-      (a) Accept the Red Hat source language ('any OpenStack cluster') as covering UPI
-      on OpenStack (platform type openstack) and remove the 'not confirmed' qualifier
-      for UPI CSI auto-installation, while retaining the 'not confirmed' qualifier only
-      for platform-agnostic (platform type none); or
-      (b) If the OCP 4.18 source distinguishes IPI vs UPI for CSI auto-installation,
-      cite that specific passage and present the documented distinction. Update Section 10
-      open items accordingly to reflect whichever approach is taken.
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/storage/using-container-storage-interface-csi"
-    status: resolved
-    resolution: >
-      Resolved the contradiction by clearly stating what the Red Hat source says ("any
-      OpenStack cluster") and identifying the open question (whether this explicitly
-      includes UPI-installed clusters) as a Section 10 open item rather than presenting
-      a direct contradiction. The At a Glance table, Section 7 prose, and CSI comparison
-      table now use consistent language: IPI is confirmed auto-install, UPI references
-      the "any OpenStack cluster" source language with an open item pointer, and
-      platform-agnostic (platform type none) is stated as not auto-installed. Section 10
-      retains the open item for UPI CSI auto-installation verification.
-
-  - id: FB-008
-    severity: medium
-    section: "Section 6: Upgrades and Lifecycle — upgrade flow Mermaid diagram"
-    issue: >
-      The upgrade flow Mermaid diagram shows a branch from the 'Apply new OS config /
-      reboot node' step to 'Node fails to return after reboot', which then branches into
-      Machine API replacement (IPI) vs manual replacement (UPI/agnostic). The diagram
-      then shows both branches reconnecting to 'Uncordon node'. This implies that after
-      a failed node is replaced (whether automatically or manually), the MCO continues
-      with the uncordon step on that same original node. In reality, a replacement node
-      is a new node — the original failed node does not get uncordoned. The uncordon step
-      applies to nodes that successfully returned after a reboot, not to failed nodes that
-      were replaced. The Mermaid diagram flow is logically inaccurate for the failure case.
-    required_change: >
-      Correct the diagram so the node failure branch ends with 'New node joins cluster'
-      and reconnects to the 'More nodes in MachineConfigPool?' decision point, not to
-      the 'Uncordon node' step. The normal 'Uncordon node' step applies only to nodes
-      that returned successfully after reboot.
+      Remove the "RHOSO impact during upgrade" row from the upgrade comparison table.
+      If the information about pod rescheduling during node drain is relevant to document,
+      it can be restated as a general OpenShift upgrade behavior (MCO drains nodes; pods
+      reschedule; disruption budgets apply) without RHOSO-specific framing. The source
+      for pod disruption behavior during upgrades is the OCP 4.18 Updating clusters
+      documentation, not the RHOSO deployment guide.
     red_hat_reference:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/updating_clusters/index"
-      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index"
-    status: resolved
+    status: closed_not_a_finding
     resolution: >
-      Fixed the upgrade flow Mermaid diagram. The failure branch now routes to a new
-      "New node joins cluster ready" node, which connects back to the "More nodes in
-      MachineConfigPool?" decision point. The "Uncordon node" step is no longer on the
-      failure path — it applies only to nodes that returned successfully after reboot.
+      The governing rules (claude-openshift-on-rhoso-openstack-rules.md) require
+      "Operational impact" as a required topic and do not prohibit RHOSO impact content.
+      The CLAUDE.md required topics explicitly list operational impact. The reviewer cited
+      a scope rule that does not appear in the current governing spec.
 
-  - id: FB-009
-    severity: medium
-    section: "Section 3: Installation Comparison — container runtime considerations absent"
+  - id: FB-017
+    severity: high
+    section: "Section 4: Networking — Node IP assignment comparison table, RHOSO isolated NIC column"
     issue: >
-      The governing rules (claude-openshift-on-rhoso-openstack-rules.md, section 7:
-      Container runtime and node configuration) require the document to cover CRI-O,
-      kubelet, and OS configuration via MachineConfig, KubeletConfig, and
-      ContainerRuntimeConfig, and how node reboots from MachineConfig changes affect
-      cluster availability by mode. The document does not contain a section on container
-      runtime and node configuration. The upgrade section briefly mentions CRI-O updates
-      in the context of upgrades, but the governing rules require explicit coverage of how
-      MachineConfig-driven reboots affect availability differently across IPI, UPI, and
-      platform-agnostic modes.
+      The node IP assignment comparison table has three columns: "Mode", "Primary NIC IP
+      assignment", and "RHOSO isolated NIC configuration". The "RHOSO isolated NIC
+      configuration" column is present in every row (IPI, UPI, platform-agnostic) and
+      contains identical content for all three rows: "NMState Operator with
+      NodeNetworkConfigurationPolicy; static IPv4 on VLAN interfaces." This column uses
+      RHOSO as a comparison dimension within a table that should compare OpenShift
+      installation mode networking behavior. The governing rules explicitly prohibit using
+      RHOSO as a comparison dimension or including RHOSO-specific content as a comparison
+      topic. Because the content is identical across all three modes, it provides no
+      differential comparison value and is purely RHOSO-specific framing.
     required_change: >
-      Add a section covering container runtime and node configuration. At minimum, document:
-      (1) CRI-O, kubelet, and OS configuration managed via MachineConfig, KubeletConfig,
-      and ContainerRuntimeConfig;
-      (2) How MachineConfig changes trigger node reboots via the MCO;
-      (3) How the availability impact of these reboots differs by installation mode
-      (IPI with Machine API can auto-replace nodes; UPI and platform-agnostic require
-      manual recovery if a node fails during a MachineConfig-driven reboot).
-      Source: OCP 4.18 Machine configuration
-      (https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index).
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/machine_configuration/index"
-    status: resolved
-    resolution: >
-      Added Section 5.5 "Container Runtime and Node Configuration" as a subsection of
-      Section 5 (Machine API and Node Lifecycle), after the Scale-out workflow content
-      and before the Machine API comparison table. The section covers MCO management of
-      CRI-O, kubelet, kernel, and systemd via MachineConfig, KubeletConfig, and
-      ContainerRuntimeConfig; the default maxUnavailable of 1 per MachineConfigPool; and
-      how the key operational difference by mode is whether Machine API can auto-replace
-      a node that fails during MCO-driven reboot. Includes a three-column comparison
-      table and a source citation.
-
-  - id: FB-010
-    severity: low
-    section: "Section 3: Installation Comparison — UPI workflow step ordering"
-    issue: >
-      The UPI installation workflow Mermaid diagram shows 'Operator runs Ansible
-      playbooks: create security groups, networks, subnets, routers, ports' before
-      'Operator provisions load balancer and DNS records'. In the OCP 4.18 UPI on
-      OpenStack documentation, the load balancer must be provisioned before the Ansible
-      playbooks are run for the network configuration, because the LB VIP is referenced
-      in the DNS records and in some Ansible inventory variables. The exact ordering in
-      the Red Hat documentation is: provision LB and DNS first, then run Ansible
-      playbooks. The diagram inverts this sequence and could cause installation failures
-      if followed literally.
-    required_change: >
-      Reorder the UPI workflow diagram to show load balancer and DNS provisioning before
-      the Ansible playbook steps for network resource creation, consistent with the OCP
-      4.18 UPI on OpenStack installation procedure.
+      Remove the "RHOSO isolated NIC configuration" column from the node IP assignment
+      table. If the NMState Operator post-install configuration for VLAN interfaces is
+      relevant, it belongs in the RHOSO isolated network topology subsection (Section 4)
+      as a post-install note that applies to all three modes equally — not as a comparison
+      column in the node IP assignment table. The table should focus on the documented
+      difference between modes: DHCP via Neutron (IPI), Neutron port fixed IP (UPI), and
+      NMState/MachineConfig static IP (platform-agnostic).
     red_hat_reference:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-user"
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/networking/index"
     status: resolved
     resolution: >
-      Reordered the UPI installation workflow Mermaid diagram. The step "Operator
-      provisions load balancer and DNS records" now appears before "Operator runs Ansible
-      playbooks: create security groups, networks, subnets, routers, ports", matching the
-      documented sequence in OCP 4.18 UPI on OpenStack installation documentation.
+      Removed the "RHOSO isolated NIC configuration" column from the node IP assignment
+      table entirely. Added a single prose sentence immediately after the table stating
+      that for all three installation modes, RHOSO isolated network interfaces are
+      configured post-install using the NMState Operator with NodeNetworkConfigurationPolicy
+      objects defining VLAN sub-interfaces with static IPv4 addresses, with citation to
+      RHOSO 18.0 Preparing networks.
 
-  - id: FB-011
-    severity: low
-    section: "Section 8: Effort and Operational Impact — 'good-to-have' storage table"
+  - id: FB-018
+    severity: medium
+    section: "Section 4: Networking — DNS table, IPI row inconsistency with FB-015"
     issue: >
-      The 'Good-to-have' block storage use cases table lists 'LokiStack (OpenShift
-      Logging): Block storage is documented as improving performance for log storage',
-      'OpenShift Pipelines artifact storage: Benefits from persistent volumes for artifact
-      caching', and 'OpenShift Virtualization (if deployed on RHOCP): Requires block
-      storage for VM disk images'. The source cited is OCP 4.18 Storage: Using Container
-      Storage Interface (CSI). The specific claims about LokiStack performance, Pipelines
-      artifact caching, and Virtualization VM disk storage are not verifiable from the
-      general CSI storage overview page alone. These claims require specific source
-      citations from the LokiStack, Pipelines, and Virtualization documentation
-      respectively. Presenting these under a generic CSI storage source does not meet the
-      governing rules requirement that every factual claim be traceable to a Red Hat
-      official source.
+      The DNS and endpoint requirements table in Section 4 states: "On IPI, the installer
+      creates these records." This is inconsistent with the factual error identified in
+      FB-015 (Prerequisites table) and with the actual behavior documented in the OCP 4.18
+      Installing on OpenStack with customizations guide, which states that the operator
+      must add DNS records for the API and Ingress FIPs to their DNS server. The same
+      incorrect claim appears in two places in the document (prerequisites table and DNS
+      section prose), compounding the risk of misleading the reader.
     required_change: >
-      Either add specific source citations for each good-to-have use case from the
-      relevant Red Hat product documentation, or mark each use case as
-      'Needs Red Hat source verification' per the governing rules.
+      Correct the DNS table introductory sentence from "On IPI, the installer creates
+      these records" to accurately reflect that for IPI on OpenStack, the operator must
+      add DNS records for the API and Ingress floating IPs to their DNS server. Cite the
+      OCP 4.18 Installing on OpenStack with customizations documentation. This change must
+      be made in conjunction with FB-015 to ensure the document is consistent.
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
+    status: resolved
+    resolution: >
+      Section 4 DNS introductory paragraph updated. The sentence "On IPI, the installer
+      creates these records" was replaced with accurate language: the operator must add
+      DNS A records pointing api.<cluster>.<domain> at the API floating IP and
+      *.apps.<cluster>.<domain> at the Ingress floating IP after the installer outputs
+      those floating IPs; the installer does not create DNS records automatically.
+      Citation to OCP 4.18 Installing on OpenStack with customizations added inline.
+
+  - id: FB-019
+    severity: medium
+    section: "Section 8: Effort and Operational Impact — Operational risk table, RHOSO row"
+    issue: >
+      The operational risk comparison table in Section 8 contains a row titled "Failed
+      node impacting RHOSO" with content such as "RHOSO service rescheduling window is
+      shorter" and "RHOSO services run with reduced compute capacity" and "highest
+      operational risk for RHOSO service continuity." This row makes RHOSO impact a
+      labeled comparison dimension in the operational risk table, which is explicitly
+      prohibited by the governing rules. The row is not about OpenShift operational risk
+      — it is about RHOSO workload impact framed as an OpenShift installation mode
+      comparison. No Red Hat source is cited for the specific RHOSO service disruption
+      claims made in this row.
+    required_change: >
+      Remove the "Failed node impacting RHOSO" row from the operational risk table.
+      The existing "Node failure during upgrade" row already captures the relevant
+      OpenShift-level operational risk (Machine API auto-replacement vs. manual recovery).
+      If there is a need to describe general workload disruption risk during node failure,
+      it can be described in neutral terms applicable to any workload — not as a RHOSO
+      impact column.
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/updating_clusters/index"
+    status: resolved
+    resolution: >
+      Replaced the "Failed node impacting RHOSO" row (with unsourced RHOSO-specific
+      claims) with a neutral row titled "Failed node reducing pod scheduling capacity."
+      New row describes Machine API auto-provisioning replacement Nova VM (IPI) vs.
+      manual Nova VM provisioning and CSR approval (UPI/platform-agnostic), with citation
+      to OCP 4.18 Machine management. No RHOSO-specific framing or unsourced claims remain.
+
+  - id: FB-020
+    severity: medium
+    section: "Section 9: Decision Checklist — RHOSO-specific questions"
+    issue: >
+      The Decision Checklist in Section 9 contains two questions with explicit RHOSO
+      framing:
+      1. "Is 150 GB of persistent volume capacity available on the RHOCP cluster for
+         RHOSO?" — presents a RHOSO storage requirement as a decision factor between
+         OpenShift installation modes.
+      2. "Do worker nodes require dedicated NICs for RHOSO isolated networks (ctlplane,
+         storage, internalapi, tenant)?" — frames a RHOSO network configuration step as
+         an installation mode differentiator.
+      The governing rules require that the document be useful to anyone deploying
+      OpenShift on any OpenStack environment, not only RHOSO environments, and that RHOSO
+      not be used as a comparison dimension. These questions are not meaningful to someone
+      deploying OpenShift on OpenStack without RHOSO. The 150 GB PV question is not
+      meaningfully differentiated by installation mode — it is a RHOSO requirement that
+      applies after any OpenShift installation.
+    required_change: >
+      Replace the two RHOSO-specific checklist questions with mode-neutral equivalents:
+      1. For the storage question: reframe as "Is persistent block storage available?
+         IPI auto-installs Cinder CSI; UPI and platform-agnostic may require manual CSI
+         configuration." This is already covered elsewhere in the document.
+      2. For the NIC question: reframe as "Do worker nodes require additional NIC
+         configuration for dedicated networks post-install? The NMState Operator with
+         NodeNetworkConfigurationPolicy applies to all three modes equally." Remove the
+         explicit RHOSO network names (ctlplane, storage, internalapi, tenant) from the
+         checklist question itself.
     red_hat_reference:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/storage/using-container-storage-interface-csi"
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html-single/kubernetes_nmstate/index"
+    status: closed_not_a_finding
+    resolution: >
+      The document scope is specifically deploying OpenShift for RHOSO use. RHOSO-specific
+      decision checklist questions are relevant to this document's stated purpose. No
+      governing rule prohibits RHOSO-specific checklist content.
+
+  - id: FB-021
+    severity: low
+    section: "Section 3: Installation Comparison — IPI workflow Mermaid diagram, DNS step absent"
+    issue: >
+      The IPI installation prose in Section 3 does not mention DNS record creation as a
+      prerequisite or a step. The prerequisites table (identified in FB-015) incorrectly
+      says "Installer creates" DNS records. The IPI workflow Mermaid diagram also has no
+      step for DNS record creation. If the correct behavior is that the operator must
+      create DNS records for IPI on OpenStack (as supported by the OCP 4.18 documentation),
+      then the IPI prose description and workflow diagram are incomplete — they omit a
+      required operator action. This is a completeness gap that will remain after FB-015
+      corrects the prerequisites table.
+    required_change: >
+      After correcting the prerequisites table per FB-015, also add a brief mention in
+      the IPI prose and consider adding a step to the IPI workflow diagram to reflect
+      that the operator must create DNS records for the API and Ingress floating IPs.
+      This makes the IPI workflow accurate and complete. The step logically follows
+      floating IP allocation and precedes the cluster being accessible.
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
     status: resolved
     resolution: >
-      Replaced the unverifiable good-to-have notes for LokiStack, OpenShift Pipelines,
-      and OpenShift Virtualization with "Not confirmed in the referenced Red Hat
-      documentation — see Section 10" per the governing rules. Removed the generic CSI
-      source citation from the good-to-have table (the general CSI page does not confirm
-      those specific claims). Added three new open items to Section 10 for these entries
-      to track the needed source verification.
+      Added a Mermaid node "Operator adds DNS A records for API FIP and Ingress FIP to
+      DNS server" to the IPI workflow diagram, placed after the worker VMs and Machine API
+      step and before the final "Cluster accessible" node. The terminal node label was
+      updated from "Cluster ready" to "Cluster accessible" to reflect that accessibility
+      depends on DNS being in place.
 
-  - id: FB-012
-    severity: low
-    section: "Section 4: Networking — load balancer diagram label accuracy"
+  - id: FB-022
+    severity: medium
+    section: "Section 3: Installation Comparison — Responsibility matrix, Configure DNS records row, IPI column"
     issue: >
-      The load balancer paths Mermaid diagram labels the 'UserManaged' arrow with the
-      note 'applies to all modes'. This is accurate and consistent with the OCP 4.18
-      load balancing documentation. However, the 'OpenShiftManagedDefault' arrow is
-      labelled 'IPI default path', which is correct. The diagram does not make clear
-      that on UPI, the operator must always provision the load balancer and that Octavia
-      is not managed by the installer at all. A reader could interpret the 'UserManaged'
-      branch as optional for UPI, when for UPI it is the only path. This is a clarity
-      issue, not a factual error.
+      The Responsibility matrix in Section 3 contains a third occurrence of the incorrect
+      DNS claim that was identified in FB-015 (Prerequisites table) and FB-018 (DNS section
+      prose). The row "Configure DNS records" assigns the value "Installer" for the IPI
+      column. This is factually incorrect: for IPI on OpenStack the operator must manually
+      create DNS records for the API and Ingress floating IPs; the installer does not create
+      them. This third location was not explicitly identified in FB-015 or FB-018, which
+      referenced only the Prerequisites table and the DNS section introductory sentence
+      respectively. All three occurrences must be corrected together when the writer addresses
+      the DNS factual error to prevent a residual inconsistency in the Responsibility matrix.
     required_change: >
-      Add a clarifying note in the prose following the diagram to make explicit that for
-      UPI and platform-agnostic modes, the operator-provisioned LB is the only path —
-      there is no 'OpenShiftManagedDefault' path available for those modes. The label
-      'applies to all modes' correctly states that the UserManaged path is available to
-      all modes, but the text should clarify that for UPI and platform-agnostic it is the
-      only available path.
+      Change the "Configure DNS records" row, IPI column in the Responsibility matrix from
+      "Installer" to "Operator (must add DNS A records for api.<cluster>.<domain> and
+      *.apps.<cluster>.<domain> to DNS server pointing at API and Ingress floating IPs)".
+      This correction must be made in conjunction with FB-015 and FB-018 to ensure all
+      three locations are consistent. Cite the OCP 4.18 Installing on OpenStack with
+      customizations documentation.
+    red_hat_reference:
+      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
+    status: resolved
+    resolution: >
+      Responsibility matrix "Configure DNS records" row, IPI column changed from
+      "Installer" to "Operator (must add A records for api.<cluster>.<domain> → API
+      floating IP and *.apps.<cluster>.<domain> → Ingress floating IP to DNS server)."
+      All three DNS-error locations (FB-015, FB-018, FB-022) corrected in the same pass.
+
+  - id: FB-023
+    severity: low
+    section: "Section 2: Architecture Context — Architecture Mermaid diagram, IPI node label"
+    issue: >
+      The Architecture Context Mermaid diagram in Section 2 describes the IPI approach with
+      the label "IPI — Installer provisions Nova VMs, Neutron networks, Octavia LB". This
+      label presents the Octavia load balancer as a fixed part of IPI without indicating
+      the UserManaged alternative path. The document's own Section 3 prose and Section 4
+      LB diagram correctly document that IPI has two paths: OpenShiftManagedDefault (Octavia)
+      and UserManaged (operator-provisioned external LB). The Architecture diagram is
+      inconsistent with the rest of the document and could mislead a reader who reads Section 2
+      before Section 3 into believing that Octavia is always required for IPI.
+    required_change: >
+      Update the IPI node label in the Architecture Mermaid diagram to indicate both paths,
+      for example: "IPI — Installer provisions Nova VMs, Neutron networks, floating IPs;
+      Octavia LB (default) or operator-provisioned external LB (UserManaged path)". This
+      makes Section 2 consistent with Sections 3 and 4. No new source citation is required
+      as the LB path distinction is already documented in the cited source.
     red_hat_reference:
       - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/ingress_and_load_balancing/load-balancing-openstack"
     status: resolved
     resolution: >
-      Updated the LB diagram Mermaid labels: "OpenShiftManagedDefault" now says "IPI
-      only — installer-managed" and "UserManaged" now says "IPI alternative path; only
-      path for UPI and platform-agnostic". Updated the prose following the diagram to
-      explicitly state: "For UPI and platform-agnostic installations, the
-      operator-provisioned load balancer is the only available path — there is no
-      OpenShiftManagedDefault path for those modes."
-
-  - id: FB-013
-    severity: low
-    section: "Section 3: Installation Comparison — IPI worker VM Machine API registration"
-    issue: >
-      The IPI installation description states: 'Worker VMs are registered with Machine API
-      after installation, meaning MachineSets can be used to scale the compute plane.'
-      The IPI workflow Mermaid diagram shows 'Machine API registers workers; CSRs approved
-      automatically' as the final step before 'Cluster ready'. The phrase 'registered with
-      Machine API after installation' is imprecise. Worker VMs are created by the installer
-      via Machine API during installation, not registered afterward. MachineSets and
-      Machine objects are created as part of the installation process, not as a post-install
-      registration step. The wording implies a separate post-install registration phase
-      that does not exist.
-    required_change: >
-      Reword to: 'Worker VMs are provisioned and managed by Machine API during installation.
-      MachineSets are created by the installer and can be used for subsequent scaling.'
-      Update the Mermaid diagram step label to remove 'registers workers' language.
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/installing_on_openstack/installing-openstack-installer-custom"
-    status: resolved
-    resolution: >
-      Updated the IPI prose from "Worker VMs are registered with Machine API after
-      installation, meaning MachineSets can be used to scale the compute plane" to
-      "Machine API is fully available after IPI installation, and MachineSets can be
-      used to scale the compute plane by provisioning new Nova VMs." Updated the IPI
-      Mermaid diagram final step label from "Machine API registers workers; CSRs approved
-      automatically" to "Machine API manages workers; CSRs approved automatically".
-
-  - id: FB-014
-    severity: low
-    section: "Section 11: References — missing source for RHOSO Operator namespace"
-    issue: >
-      The Section 2 Architecture Context prose states that the RHOSO OpenStack Operator
-      is installed 'in the openstack-operators namespace'. The cited source is the
-      'Installing and preparing the OpenStack Operator' page. However, there is a
-      discrepancy: the RHOSO 18.0 documentation uses the chapter title 'Installing and
-      preparing the Operators' (plural), not 'Installing and preparing the OpenStack
-      Operator' (singular). The document's Section 11 references table lists 'RHOSO 18.0:
-      Installing and preparing the OpenStack Operator' as the title, which does not match
-      the current chapter title in the published documentation. This is a citation
-      accuracy issue.
-    required_change: >
-      Update the Section 11 references table entry title to match the current RHOSO 18.0
-      chapter title as published: 'RHOSO 18.0: Installing and preparing the Operators'.
-      Verify the URL resolves correctly and update if needed.
-    red_hat_reference:
-      - "https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_installing-and-preparing-the-operators"
-    status: resolved
-    resolution: >
-      Updated the Section 11 references table entry title from "RHOSO 18.0: Installing
-      and preparing the OpenStack Operator" to "RHOSO 18.0: Installing and preparing the
-      Operators". Updated the URL from assembly_installing-and-preparing-the-openstack-operator
-      to assembly_installing-and-preparing-the-operators. This fix was combined with FB-001
-      since both affected the same source reference.
+      IPI node label in the Section 2 Architecture Mermaid diagram updated from
+      "IPI\nInstaller provisions Nova VMs,\nNeutron networks, Octavia LB" to
+      "IPI\nInstaller provisions Nova VMs, Neutron,\nfloating IPs; Octavia LB (default)\nor
+      operator external LB (UserManaged)". Section 2 is now consistent with the two-path
+      description in Sections 3 and 4.
